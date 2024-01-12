@@ -21,5 +21,6 @@ int main(int argc, char* argv[])
 	SDL_Renderer *s = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 	
 	Game game(SCREEN_WIDTH,SCREEN_HEIGHT, s);
-	return game.main();
+	bool success = game.main();
+	return !success;
 }

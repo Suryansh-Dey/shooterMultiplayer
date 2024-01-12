@@ -16,8 +16,9 @@ app.get("/quit",(req,res)=>{
     res.send("Server closed!")
     server.close()
 })
-app.get("/:print",(req,res)=>{
-    res.send(req.params.print)
+app.get("/:data",(req,res)=>{
+    console.log("Recieved: " + req.params.data)
+    res.send("got")
 })
 let server = app.listen(3000,()=>{
     console.log("Server started on port 3000")

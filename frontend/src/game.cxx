@@ -9,13 +9,14 @@ class Game
     std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
     Shooter player1, player2;
     InputManager inputManager;
+    Client client; 
 
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
     void loadResources();
     bool main();
 };
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT)
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000/water")
 {
     loadResources();
     player1 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, 100, 100, 10, shooterImages);
