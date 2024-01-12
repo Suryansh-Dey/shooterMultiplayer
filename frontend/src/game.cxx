@@ -21,6 +21,7 @@ Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : render
     player1 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, 100, 100, 10, shooterImages);
     player2 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, 100, 400, 10, shooterImages);
     inputManager = InputManager(&player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 void Game::loadResources()
 {
