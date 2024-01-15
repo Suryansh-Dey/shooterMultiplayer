@@ -9,7 +9,7 @@ class Game
     std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
     Shooter player1, player2;
     InputManager inputManager;
-    Client client; 
+    Client client;
 
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
@@ -56,7 +56,7 @@ void Game::loadResources()
 }
 bool Game::main()
 {
-    std::cout<<"Generated code: "<<client.generateCode()<<'\n';
+    std::cout << "Generated code: " << client.getId() << '\n';
     while (inputManager.handelInput())
     {
         this->player1.update();
@@ -68,6 +68,7 @@ bool Game::main()
         SDL_RenderPresent(this->renderer);
         SDL_RenderClear(this->renderer);
         FPS_manager(FRAME_GAP);
+        client.sendAndRecieve(player1, player2);
     }
     return true;
 }
