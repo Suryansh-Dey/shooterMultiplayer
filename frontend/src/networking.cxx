@@ -28,7 +28,7 @@ class Client
     std::thread clientThread;
 
     static std::string encodeURL(State state);
-    static State decodeURL( std::string state);
+    static State decodeURL(std::string state);
     static void clientThreadFunction(Client *client, unsigned int id);
     static size_t storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code);
 
