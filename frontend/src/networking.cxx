@@ -73,13 +73,13 @@ Client::Client(std::string serverURL) : serverURL(serverURL)
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &(this->response));
     curl_easy_perform(this->curl);
-    this->id = std::stoi(this->response);
     CURLcode result = curl_easy_perform(this->curl);
     if (result != CURLE_OK)
     {
         fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
         exit(1);
     }
+    this->id = std::stoi(this->response);
     clientThread = std::thread(this->clientThreadFunction, this, this->id);
 }
 void Client::joinRandom()
