@@ -4,6 +4,7 @@ class Shooter
 {
 	friend void collisionHandeler(Shooter &, Shooter &);
 	friend void animateDeath(Shooter &, SDL_Renderer *, std::unordered_map<std::string, SDL_Texture *>);
+	friend class State;
 
   public:
 	enum bulletType
@@ -32,7 +33,7 @@ class Shooter
 		unsigned int shootingTime;
 		enum flag state = Bullet::available;
 		enum bulletType type;
-		float shootingAngle_degree;
+		int shootingAngle_degree;
 	};
 
   private:
@@ -87,9 +88,9 @@ class Shooter
 	inline float get_gunAngle_degree();
 	void render(SDL_Renderer * s);
 	void move(int angle_degree);
-	inline void rotateGun(float angle_degree);
+	inline void rotateGun(int angle_degree);
 	bool shoot(enum bulletType type);
-	inline bool shoot(float shootingAngle_degree, enum bulletType type);
+	inline bool shoot(int shootingAngle_degree, enum bulletType type);
 	void update();
 };
 
@@ -273,11 +274,10 @@ void Shooter::move(int angle_degree)
 		  sin((M_PI / 180) * angle_degree) * SPEED * speed_factor);
 	animateMoveMagic(2 * speed_factor);
 }
-void Shooter::rotateGun(float angle_degree)
+void Shooter::rotateGun(int angle_degree)
 {
 	gunAngle_degree += angle_degree;
 	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); //keeping angle between 0 to 360 to avoid int overflow in long run
-
 }
 bool Shooter::shoot(enum bulletType type)
 {
@@ -303,7 +303,7 @@ bool Shooter::shoot(enum bulletType type)
 	}
 	return false;
 }
-bool Shooter::shoot(float shootingAngle_degree, enum bulletType type)
+bool Shooter::shoot(int shootingAngle_degree, enum bulletType type)
 {
 	gunAngle_degree = shootingAngle_degree;
 	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); //keeping angle between 0 to 360 to avoid int overflow in long run

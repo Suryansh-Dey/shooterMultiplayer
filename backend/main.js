@@ -1,24 +1,26 @@
 const express = require("express")
 let app = express()
-let router = express.Router()
-router.get('/',(req,res)=>{
-    res.send("Welcome to router")
-})
-router.get('/about',(req,res)=>
-{
-    res.send("I am a router what else")
-})
-app.use("/router",router)
+let nextPlayerId = 1;
 app.get("/",(req,res)=>{
     res.send("Hello world")
+})
+app.get("/start",(req,res)=>{
+    res.send("You are connected")
+})
+app.get("/generateCode",(req,res)=>{
+    res.send(nextPlayerId.toString());
+    nextPlayerId++;
+})
+app.get("/actions/:id",(req,res)=>{
+    res.send({movementAngle_degree : -1,
+    shootingAngle_degree : -1,
+    gunAngle_degree : 0,
+    type: "snowBall"});
+    nextPlayerId++;
 })
 app.get("/quit",(req,res)=>{
     res.send("Server closed!")
     server.close()
-})
-app.get("/:data",(req,res)=>{
-    console.log("Recieved: " + req.params.data)
-    res.send("got")
 })
 let server = app.listen(3000,()=>{
     console.log("Server started on port 3000")
