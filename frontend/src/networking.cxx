@@ -56,14 +56,13 @@ void Client::clientThreadFunction(Client *client, unsigned int id)
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
     while (client->clientThreadPermission)
     {
-        if (client->clientThreadInvoked)
-        {
-            curl_easy_setopt(curl, CURLOPT_URL, ("http://localhost:3000/state/" + std::to_string(id)).c_str());
-            response = "";
-            curl_easy_perform(curl);
-            std::cout << response << '\n';
-            client->clientThreadInvoked = false;
-        }
+        if (!client->clientThreadInvoked)
+            continue;
+        curl_easy_setopt(curl, CURLOPT_URL, ("http://localhost:3000/state/" + std::to_string(id)).c_str());
+        response = "";
+        curl_easy_perform(curl);
+        std::cout << response << '\n';
+        client->clientThreadInvoked = false;
     }
 }
 Client::Client(std::string serverURL) : serverURL(serverURL)
