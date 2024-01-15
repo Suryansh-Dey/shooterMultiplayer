@@ -72,7 +72,6 @@ Client::Client(std::string serverURL) : serverURL(serverURL)
     curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/start");
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &(this->response));
-    curl_easy_perform(this->curl);
     CURLcode result = curl_easy_perform(this->curl);
     if (result != CURLE_OK)
     {
