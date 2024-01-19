@@ -56,7 +56,7 @@ void Game::loadResources()
 }
 bool Game::main()
 {
-    std::cout << "Generated code: " << client.getId() << '\n';
+    client.joinRandom();
     while (inputManager.handelInput())
     {
         this->player1.update();

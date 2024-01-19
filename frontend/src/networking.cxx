@@ -18,18 +18,18 @@ class Client
     {
         bool active = false;
     };
-    unsigned int id;
     CURL *curl;
     std::string serverURL, response;
     // Shared memory with clientThread!!
     State state1, state2;
     std::atomic<bool> clientThreadPermission = true, clientThreadInvoked = false;
+    std::atomic<unsigned int> id = 0;
 
     std::thread clientThread;
 
     static std::string encodeURL(State state);
     static State decodeURL(std::string state);
-    static void clientThreadFunction(Client *client, unsigned int id);
+    static void clientThreadFunction(Client *client);
     static size_t storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code);
 
 public:
@@ -48,7 +48,7 @@ size_t Client::storeToStringCallback(void *contents, size_t size, size_t nmemb, 
     code->append(static_cast<char *>(contents), total_size);
     return total_size;
 }
-void Client::clientThreadFunction(Client *client, unsigned int id)
+void Client::clientThreadFunction(Client *client)
 {
     CURL *curl = curl_easy_init();
     std::string response;
@@ -58,7 +58,7 @@ void Client::clientThreadFunction(Client *client, unsigned int id)
     {
         if (!client->clientThreadInvoked)
             continue;
-        curl_easy_setopt(curl, CURLOPT_URL, ("http://localhost:3000/state/" + std::to_string(id)).c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, ("http://localhost:3000/update?id=" + std::to_string(client->id) + "&state=testing").c_str());
         response = "";
         curl_easy_perform(curl);
         std::cout << response << '\n';
@@ -68,7 +68,7 @@ void Client::clientThreadFunction(Client *client, unsigned int id)
 Client::Client(std::string serverURL) : serverURL(serverURL)
 {
     this->curl = curl_easy_init();
-    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/start");
+    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/");
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &(this->response));
     CURLcode result = curl_easy_perform(this->curl);
@@ -77,27 +77,32 @@ Client::Client(std::string serverURL) : serverURL(serverURL)
         fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
         exit(1);
     }
-    this->id = std::stoi(this->response);
-    clientThread = std::thread(this->clientThreadFunction, this, this->id);
+    clientThread = std::thread(this->clientThreadFunction, this);
 }
 void Client::joinRandom()
 {
-    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/joinRandom");
+    this->response = "";
+    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/join?id=random");
     curl_easy_perform(this->curl);
+    this->id = std::stoi(this->response);
+}
+void Client::joinByCode(std::string code)
+{
+    this->response = "";
+    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/join?id=" + code);
+    curl_easy_perform(this->curl);
+    this->id = std::stoi(this->response);
 }
 unsigned int Client::getId()
 {
     return this->id;
 }
-void Client::joinByCode(std::string code)
-{
-    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/joinByCode?code=" + code);
-    curl_easy_perform(this->curl);
-}
 Client::Match Client::getMatch()
 {
-    Client::Match match;
-    return match;
+    this->response = "";
+    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/isAvailable?id=" + std::to_string(id));
+    curl_easy_perform(this->curl);
+    return Client::Match{response == "true"};
 }
 void Client::sendAndRecieve(Shooter &player1, Shooter &player2)
 {
@@ -112,6 +117,6 @@ Client::~Client()
 {
     this->clientThreadPermission = false;
     clientThread.join();
-    curl_easy_setopt(this->curl, CURLOPT_URL, "http://localhost:3000/end");
+    curl_easy_setopt(this->curl, CURLOPT_URL, ("http://localhost:3000/quit?id=" + std::to_string(this->id)).c_str());
     curl_easy_perform(this->curl);
 }

@@ -31,9 +31,9 @@ public:
 };
 
 BallSelectButtons::BallSelectButtons(Shooter *player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT) : SelectableOptions(std::unordered_map<std::string, Icon>{
-                                                                                                                                                        {"snowBall", Icon(images["snowBall"], 0.4*SCREEN_WIDTH, 0.9*SCREEN_HEIGHT, 0.1*SCREEN_WIDTH, 0.1*SCREEN_HEIGHT)},
-                                                                                                                                                        {"fireBall", Icon(images["fireBall"], 0.5*SCREEN_WIDTH, 0.9*SCREEN_HEIGHT, 0.1*SCREEN_WIDTH, 0.1*SCREEN_HEIGHT)},
-                                                                                                                                                        {"web", Icon(images["web"], 0.6*SCREEN_WIDTH, 0.9*SCREEN_HEIGHT, 0.1*SCREEN_WIDTH, 0.1*SCREEN_HEIGHT)}}),
+                                                                                                                                                        {"snowBall", Icon(images["snowBall"], 0.4 * SCREEN_WIDTH, 0.9 * SCREEN_HEIGHT, 0.1 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT)},
+                                                                                                                                                        {"fireBall", Icon(images["fireBall"], 0.5 * SCREEN_WIDTH, 0.9 * SCREEN_HEIGHT, 0.1 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT)},
+                                                                                                                                                        {"web", Icon(images["web"], 0.6 * SCREEN_WIDTH, 0.9 * SCREEN_HEIGHT, 0.1 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT)}}),
                                                                                                                                                     player(player)
 {
 }
@@ -109,6 +109,12 @@ void InputManager::pressButtons(SDL_Event event)
         break;
     case SDLK_d:
         this->joystick.pressRight();
+        break;
+    case SDLK_ESCAPE:
+        if (SDL_GetRelativeMouseMode() == SDL_TRUE)
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        else
+            SDL_SetRelativeMouseMode(SDL_TRUE);
         break;
     }
 }

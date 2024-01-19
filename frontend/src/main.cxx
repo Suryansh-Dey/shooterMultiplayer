@@ -13,7 +13,7 @@
 #include "networking.cxx"
 #include "UI/UI.cxx"
 #include "game.cxx"
-int SCREEN_WIDTH, SCREEN_HEIGHT;
+int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 500;
 
 int main(int argc, char* argv[])
 {
