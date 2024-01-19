@@ -110,7 +110,7 @@ void InputManager::pressButtons(SDL_Event event)
     case SDLK_d:
         this->joystick.pressRight();
         break;
-    case SDLK_ESCAPE:
+    case SDLK_RCTRL:
         if (SDL_GetRelativeMouseMode() == SDL_TRUE)
             SDL_SetRelativeMouseMode(SDL_FALSE);
         else

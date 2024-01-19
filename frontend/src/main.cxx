@@ -14,13 +14,19 @@
 #include "UI/UI.cxx"
 #include "game.cxx"
 int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 500;
+bool quit = false;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Renderer *s = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-	
-	Game game(SCREEN_WIDTH,SCREEN_HEIGHT, s);
-	bool success = game.main();
-	return !success;
+	Game::loadResources(s);
+
+	while (!quit)
+	{
+		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, s);
+		quit = game.main();
+		std::cout << "Match finished\n";
+	}
+	return 0;
 }

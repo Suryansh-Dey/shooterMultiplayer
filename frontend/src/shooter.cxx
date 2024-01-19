@@ -28,7 +28,8 @@ class Shooter
 			travelling,
 			onCoolDown
 		};
-		static constexpr int RADIUS = 30, SPEED = 10, COOL_DOWN_TIME = 100, FREEZ_PERSISTANCE = 100, JAM_PERSISTANCE = 150, FIRE_BALL_EFFECT = 1, FREEZING_EFFECT = 1;
+		static int RADIUS, SPEED;
+		static constexpr int COOL_DOWN_TIME = 100, FREEZ_PERSISTANCE = 100, JAM_PERSISTANCE = 150, FIRE_BALL_EFFECT = 1, FREEZING_EFFECT = 1;
 		float x, y;
 		unsigned int shootingTime;
 		enum flag state = Bullet::available;
@@ -68,6 +69,8 @@ class Shooter
 	Shooter() {}
 	Shooter(int arg_SCREEN_WIDTH, int arg_SCREEN_HEIGHT, int arg_x, int arg_y, int magazine_size, std::unordered_map<std::string, SDL_Texture *> arg_images, int RADIUS = 50, int GUN_RADIUS = 20, int SPEED = 7, int RECOIL = 10) : SCREEN_WIDTH(arg_SCREEN_WIDTH), SCREEN_HEIGHT(arg_SCREEN_HEIGHT), images(arg_images), x(arg_x), y(arg_y), health(10), state(none), magazine(magazine_size), RADIUS(RADIUS), GUN_RADIUS(GUN_RADIUS), SPEED(SPEED), RECOIL(RECOIL)
 	{
+		Shooter::Bullet::RADIUS = SCREEN_HEIGHT * 0.03;
+		Shooter::Bullet::SPEED = SCREEN_HEIGHT * 0.01;
 		availableBulletCount = magazine.size();
 		snowParticleFrames.emplace_back(images["snowParticle_1"]);
 		snowParticleFrames.emplace_back(images["snowParticle_2"]);
@@ -93,6 +96,8 @@ class Shooter
 	inline bool shoot(int shootingAngle_degree, enum bulletType type);
 	void update();
 };
+
+int Shooter::Bullet::RADIUS,Shooter::Bullet::SPEED;
 
 void Shooter::shift(int dx, int dy)
 {
