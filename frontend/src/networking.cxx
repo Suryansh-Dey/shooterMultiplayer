@@ -6,13 +6,25 @@ class State
 {
 public:
     float x, y;
-    int movementAngle_degree, gunAngle_degree;
+    int headingAngle_degree, gunAngle_degree;
     std::vector<Shooter::Bullet> magazine;
     void copy(Shooter &player);
     void sync(Shooter &player);
 };
-void State::copy(Shooter &player) {}
-void State::sync(Shooter &player) {}
+void State::copy(Shooter &player)
+{
+    this->x = player.x;
+    this->y = player.y;
+    this->headingAngle_degree = player.headingAngle_degree;
+    this->gunAngle_degree = player.gunAngle_degree;
+}
+void State::sync(Shooter &player)
+{
+    player.x = this->x;
+    player.y = this->y;
+    player.headingAngle_degree = this->headingAngle_degree;
+    player.gunAngle_degree = this->gunAngle_degree;
+}
 class Client
 {
     struct Match
@@ -29,13 +41,13 @@ class Client
 
     std::thread clientThread;
 
-    static std::string encodeURL(State state, unsigned int id);
-    static State decodeURL(std::string URL, unsigned int id);
-    static void clientThreadFunction(Client *client, std::string serverURL);
+    static std::string encodeURL(State state, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
+    static State decodeURL(std::string URL, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
+    static void clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
     static size_t storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code);
 
 public:
-    Client(std::string serverURL);
+    Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
     void joinRandom();
     inline unsigned int getId();
     void joinByCode(std::string code);
@@ -46,10 +58,10 @@ public:
 
 std::string Client::serverURL;
 
-std::string Client::encodeURL(State state, unsigned int id)
+std::string Client::encodeURL(State state, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
-    std::string data = Client::serverURL + "/update?id=" + std::to_string(id) + "&state=";
-    data += std::to_string(state.x / float(SCREEN_WIDTH)) + " " + std::to_string(state.y / float(SCREEN_WIDTH)) + " " + std::to_string(state.movementAngle_degree) + " " + std::to_string(state.gunAngle_degree) + " ";
+    std::string data = "/update?id=" + std::to_string(id) + "&state=";
+    data += std::to_string(state.x / float(SCREEN_WIDTH)) + "," + std::to_string(state.y / float(SCREEN_HEIGHT)) + "," + std::to_string(state.headingAngle_degree) + "," + std::to_string(state.gunAngle_degree) + ",";
     // for(Shooter::Bullet bullet: state.magazine)
     // {
     //     data += std::to_string(bullet.x/float(SCREEN_WIDTH))+" ";
@@ -57,7 +69,7 @@ std::string Client::encodeURL(State state, unsigned int id)
     // }
     return data;
 }
-State Client::decodeURL(std::string URL, unsigned int id)
+State Client::decodeURL(std::string URL, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
     State state;
     uint16_t dataStartIdx;
@@ -72,10 +84,13 @@ State Client::decodeURL(std::string URL, unsigned int id)
     std::stringstream data(URL.substr(dataStartIdx));
     float val;
     data >> val;
+    data.ignore();
     state.x = val * SCREEN_WIDTH;
     data >> val;
-    state.y = val * SCREEN_WIDTH;
-    data >> state.movementAngle_degree;
+    data.ignore();
+    state.y = val * SCREEN_HEIGHT;
+    data >> state.headingAngle_degree;
+    data.ignore();
     data >> state.gunAngle_degree;
     return state;
 }
@@ -85,7 +100,7 @@ size_t Client::storeToStringCallback(void *contents, size_t size, size_t nmemb, 
     code->append(static_cast<char *>(contents), total_size);
     return total_size;
 }
-void Client::clientThreadFunction(Client *client, std::string serverURL)
+void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
     CURL *curl = curl_easy_init();
     std::string response;
@@ -95,14 +110,16 @@ void Client::clientThreadFunction(Client *client, std::string serverURL)
     {
         if (!client->clientThreadInvoked)
             continue;
-        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?id=" + std::to_string(client->id) + "&state=testing").c_str());
+        // Processing...
         response = "";
+        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + Client::encodeURL(client->state1, client->id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
         curl_easy_perform(curl);
-        std::cout << response << '\n';
+        client->state2 = Client::decodeURL(response, client->id, SCREEN_WIDTH, SCREEN_HEIGHT);
+
         client->clientThreadInvoked = false;
     }
 }
-Client::Client(std::string serverURL)
+Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
     Client::serverURL = serverURL;
     this->curl = curl_easy_init();
@@ -115,7 +132,7 @@ Client::Client(std::string serverURL)
         fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
         exit(1);
     }
-    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL);
+    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 void Client::joinRandom()
 {

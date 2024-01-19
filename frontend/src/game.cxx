@@ -18,7 +18,7 @@ public:
     bool main();
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000")
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT)
 {
     this->client.joinRandom();
     this->gameId = this->client.getId();
