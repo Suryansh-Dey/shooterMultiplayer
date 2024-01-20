@@ -92,7 +92,8 @@ bool Game::main()
         SDL_RenderPresent(this->renderer);
         SDL_RenderClear(this->renderer);
         FPS_manager(FRAME_GAP);
-        client.sendAndRecieve(player1, player2);
+        if(!client.sendAndRecieve(player1, player2))
+            return false;
     }
     return true;
 }

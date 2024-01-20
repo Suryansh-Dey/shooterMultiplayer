@@ -5,9 +5,11 @@
 class State
 {
 public:
+    bool gameOn = true;
     float x, y;
     int headingAngle_degree, gunAngle_degree;
     std::vector<Shooter::Bullet> magazine;
+    unsigned int time;
     void copy(Shooter &player);
     void sync(Shooter &player);
 };
@@ -17,6 +19,8 @@ void State::copy(Shooter &player)
     this->y = player.y;
     this->headingAngle_degree = player.headingAngle_degree;
     this->gunAngle_degree = player.gunAngle_degree;
+    this->time = player.time;
+    this->magazine = player.magazine;
 }
 void State::sync(Shooter &player)
 {
@@ -24,6 +28,8 @@ void State::sync(Shooter &player)
     player.y = this->y;
     player.headingAngle_degree = this->headingAngle_degree;
     player.gunAngle_degree = this->gunAngle_degree;
+    player.time = this->time;
+    player.magazine = this->magazine;
 }
 class Client
 {
@@ -42,7 +48,7 @@ class Client
     std::thread clientThread;
 
     static std::string encodeURL(State state, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
-    static State decodeURL(std::string URL, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
+    static State decodeURL(std::stringstream data, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
     static void clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
     static size_t storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code);
 
@@ -52,7 +58,7 @@ public:
     inline unsigned int getId();
     void joinByCode(std::string code);
     Match getMatch();
-    void sendAndRecieve(Shooter &player1, Shooter &player2);
+    bool sendAndRecieve(Shooter &player1, Shooter &player2);
     ~Client();
 };
 
@@ -60,28 +66,25 @@ std::string Client::serverURL;
 
 std::string Client::encodeURL(State state, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
-    std::string data = "/update?id=" + std::to_string(id) + "&state=";
-    data += std::to_string(state.x / float(SCREEN_WIDTH)) + "," + std::to_string(state.y / float(SCREEN_HEIGHT)) + "," + std::to_string(state.headingAngle_degree) + "," + std::to_string(state.gunAngle_degree) + ",";
-    // for(Shooter::Bullet bullet: state.magazine)
-    // {
-    //     data += std::to_string(bullet.x/float(SCREEN_WIDTH))+" ";
-    //     data += std::to_string(bullet.y/float(SCREEN_HEIGHT))+" ";
-    // }
+    std::string data = "id=" + std::to_string(id) + "&state=";
+    data += std::to_string(state.x / float(SCREEN_WIDTH)) + "," + std::to_string(state.y / float(SCREEN_HEIGHT)) + "," + std::to_string(state.headingAngle_degree) + "," + std::to_string(state.gunAngle_degree) + "," + std::to_string(state.time) + ",";
+    for (Shooter::Bullet bullet : state.magazine)
+    {
+        if (bullet.state == Shooter::Bullet::travelling)
+            data += std::to_string(bullet.x / float(SCREEN_WIDTH)) + "," + std::to_string(bullet.y / float(SCREEN_HEIGHT)) + "," + std::to_string(bullet.shootingAngle_degree) + "," + std::to_string(bullet.type) + "," + std::to_string(bullet.shootingTime) + ",";
+        else
+            data += "s" + std::to_string(uint8_t(bullet.state)) + ",";
+    }
     return data;
 }
-State Client::decodeURL(std::string URL, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
+State Client::decodeURL(std::stringstream data, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
     State state;
-    uint16_t dataStartIdx;
-    for (uint16_t idx = 0; idx < URL.length(); idx++)
+    if (data.str() == "0")
     {
-        if (URL[idx] == '&')
-        {
-            dataStartIdx = idx + 1 + 6;
-            break;
-        }
+        state.gameOn = false;
+        return state;
     }
-    std::stringstream data(URL.substr(dataStartIdx));
     float val;
     data >> val;
     data.ignore();
@@ -92,7 +95,46 @@ State Client::decodeURL(std::string URL, unsigned int id, uint32_t SCREEN_WIDTH,
     data >> state.headingAngle_degree;
     data.ignore();
     data >> state.gunAngle_degree;
-    return state;
+    data.ignore();
+    data >> state.time;
+    data.ignore();
+    while (true)
+    {
+        Shooter::Bullet bullet;
+        float val;
+        switch (data.peek())
+        {
+        case EOF:
+            return state;
+        case 's':
+            data.ignore();
+            data >> val;
+            bullet.state = Shooter::Bullet::flag(val);
+            break;
+        default:
+            bullet.state = Shooter::Bullet::travelling;
+            data >> val;
+            bullet.x = val * SCREEN_WIDTH;
+            data.ignore();
+
+            data >> val;
+            bullet.y = val * SCREEN_HEIGHT;
+            data.ignore();
+
+            data >> val;
+            bullet.shootingAngle_degree = val;
+            data.ignore();
+
+            data >> val;
+            bullet.type = Shooter::bulletType(val);
+            data.ignore();
+
+            data >> val;
+            bullet.shootingTime = val;
+        }
+        data.ignore();
+        state.magazine.emplace_back(bullet);
+    }
 }
 size_t Client::storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code)
 {
@@ -112,16 +154,18 @@ void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_
             continue;
         // Processing...
         response = "";
-        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + Client::encodeURL(client->state1, client->id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?" + Client::encodeURL(client->state1, client->id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
         curl_easy_perform(curl);
-        client->state2 = Client::decodeURL(response, client->id, SCREEN_WIDTH, SCREEN_HEIGHT);
+        client->state2 = Client::decodeURL(std::stringstream(response), client->id, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         client->clientThreadInvoked = false;
     }
+    curl_easy_cleanup(curl);
 }
 Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
 {
     Client::serverURL = serverURL;
+    curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
     curl_easy_setopt(this->curl, CURLOPT_URL, serverURL.c_str());
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
@@ -159,14 +203,17 @@ Client::Match Client::getMatch()
     curl_easy_perform(this->curl);
     return Client::Match{response == "true"};
 }
-void Client::sendAndRecieve(Shooter &player1, Shooter &player2)
+bool Client::sendAndRecieve(Shooter &player1, Shooter &player2)
 {
+    bool gameOn;
     while (Client::clientThreadInvoked)
     {
     }
     state1.copy(player1);
     state2.sync(player2);
+    gameOn = state2.gameOn;
     Client::clientThreadInvoked = true;
+    return gameOn;
 }
 Client::~Client()
 {
@@ -174,4 +221,6 @@ Client::~Client()
     clientThread.join();
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/quit?id=" + std::to_string(this->id)).c_str());
     curl_easy_perform(this->curl);
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
 }

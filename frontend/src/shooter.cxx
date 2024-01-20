@@ -69,8 +69,8 @@ class Shooter
 	Shooter() {}
 	Shooter(int arg_SCREEN_WIDTH, int arg_SCREEN_HEIGHT, int arg_x, int arg_y, int magazine_size, std::unordered_map<std::string, SDL_Texture *> arg_images, int RADIUS = 50, int GUN_RADIUS = 20, int SPEED = 7, int RECOIL = 10) : SCREEN_WIDTH(arg_SCREEN_WIDTH), SCREEN_HEIGHT(arg_SCREEN_HEIGHT), images(arg_images), x(arg_x), y(arg_y), health(10), state(none), magazine(magazine_size), RADIUS(RADIUS), GUN_RADIUS(GUN_RADIUS), SPEED(SPEED), RECOIL(RECOIL)
 	{
-		Shooter::Bullet::RADIUS = SCREEN_HEIGHT * 0.03;
-		Shooter::Bullet::SPEED = SCREEN_HEIGHT * 0.01;
+		Shooter::Bullet::RADIUS = SCREEN_HEIGHT * 0.06;
+		Shooter::Bullet::SPEED = SCREEN_HEIGHT * 0.015;
 		availableBulletCount = magazine.size();
 		snowParticleFrames.emplace_back(images["snowParticle_1"]);
 		snowParticleFrames.emplace_back(images["snowParticle_2"]);
