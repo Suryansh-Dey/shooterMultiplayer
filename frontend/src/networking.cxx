@@ -5,6 +5,8 @@
 #include <condition_variable>
 class State
 {
+    unsigned int lastUpdateTime;
+
 public:
     bool gameOn = true;
     float x, y;
@@ -13,6 +15,7 @@ public:
     unsigned int time;
     void copy(Shooter &player);
     void sync(Shooter &player);
+    inline bool isUpdated();
 };
 void State::copy(Shooter &player)
 {
@@ -22,6 +25,7 @@ void State::copy(Shooter &player)
     this->gunAngle_degree = player.gunAngle_degree;
     this->time = player.time;
     this->magazine = player.magazine;
+    lastUpdateTime = this->time;
 }
 void State::sync(Shooter &player)
 {
@@ -39,6 +43,11 @@ void State::sync(Shooter &player)
         if (player.magazine[bulletNo].state != Shooter::Bullet::travelling)
             player.magazine[bulletNo] = this->magazine[bulletNo];
     }
+    lastUpdateTime = this->time;
+}
+bool State::isUpdated()
+{
+    return this->lastUpdateTime < this->time;
 }
 class Client
 {
@@ -70,6 +79,7 @@ public:
     inline unsigned int getId();
     void joinByCode(std::string code);
     Match getMatch();
+    bool initMatch(Shooter &player1, Shooter &player2);
     bool sendAndRecieve(Shooter &player1, Shooter &player2);
     ~Client();
 };
@@ -97,8 +107,6 @@ State Client::decodeURL(std::stringstream data, unsigned int id, uint32_t SCREEN
         state.gameOn = false;
         return state;
     }
-    else if (data.str() == "NULL")
-        return state;
     float val;
     data >> val;
     data.ignore();
@@ -218,12 +226,28 @@ Client::Match Client::getMatch()
     curl_easy_perform(this->curl);
     return Client::Match{response == "true"};
 }
+bool Client::initMatch(Shooter &player1, Shooter &player2)
+{
+    response = "";
+    this->clientThreadMutex.lock();
+    state1.copy(player1);
+    curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?" + Client::encodeURL(state1, id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
+    curl_easy_perform(curl);
+    if (response != "NULL")
+    {
+        state2 = Client::decodeURL(std::stringstream(response), id, SCREEN_WIDTH, SCREEN_HEIGHT);
+        state2.sync(player2);
+    }
+    this->clientThreadMutex.unlock();
+    return response != "NULL";
+}
 bool Client::sendAndRecieve(Shooter &player1, Shooter &player2)
 {
     bool gameOn;
     this->clientThreadMutex.lock();
     state1.copy(player1);
-    state2.sync(player2);
+    if (state2.isUpdated())
+        state2.sync(player2);
     gameOn = state2.gameOn;
     this->clientThreadInvoker.notify_one();
     this->clientThreadMutex.unlock();
