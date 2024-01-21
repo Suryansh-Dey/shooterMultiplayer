@@ -2,6 +2,8 @@
 #include <thread>
 #include <atomic>
 #include <sstream>
+#include <mutex>
+#include <condition_variable>
 class State
 {
 public:
@@ -44,7 +46,10 @@ class Client
     unsigned int id = 0;
     // Shared memory with clientThread!!
     State state1, state2;
-    std::atomic<bool> clientThreadPermission = true, clientThreadInvoked = false;
+    std::atomic<bool> clientThreadPermission = true;
+    bool clientThreadInvoked = false;
+    std::mutex clientThreadMutex;
+    std::condition_variable clientThreadNotifier;
 
     std::thread clientThread;
 
@@ -151,10 +156,13 @@ void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_
     std::string response;
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    while (client->clientThreadPermission)
+    while (true)
     {
-        if (!client->clientThreadInvoked)
-            continue;
+        std::unique_lock<std::mutex> lock(client->clientThreadMutex);
+        client->clientThreadNotifier.wait(lock, [client]
+                                          { return client->clientThreadInvoked; });
+        if (!client->clientThreadPermission)
+            break;
         // Processing...
         response = "";
         curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?" + Client::encodeURL(client->state1, id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
@@ -210,18 +218,22 @@ Client::Match Client::getMatch()
 bool Client::sendAndRecieve(Shooter &player1, Shooter &player2)
 {
     bool gameOn;
-    while (Client::clientThreadInvoked)
-    {
-    }
+    this->clientThreadMutex.lock();
     state1.copy(player1);
     state2.sync(player2);
     gameOn = state2.gameOn;
     Client::clientThreadInvoked = true;
+    this->clientThreadMutex.unlock();
+    this->clientThreadNotifier.notify_one();
     return gameOn;
 }
 Client::~Client()
 {
+    this->clientThreadMutex.lock();
+    this->clientThreadInvoked = true;
     this->clientThreadPermission = false;
+    this->clientThreadMutex.unlock();
+    this->clientThreadNotifier.notify_one();
     if (clientThread.joinable())
         clientThread.join();
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/quit?id=" + std::to_string(this->id)).c_str());

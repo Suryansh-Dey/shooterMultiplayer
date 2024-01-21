@@ -65,6 +65,7 @@ void Game::loadResources(SDL_Renderer *renderer)
 }
 bool Game::main()
 {
+    SDL_SetRelativeMouseMode(SDL_FALSE);
     while (!this->client.getMatch().active)
     {
         SDL_Event event;
