@@ -26,12 +26,20 @@ void State::copy(Shooter &player)
 }
 void State::sync(Shooter &player)
 {
-    player.x = this->x;
-    player.y = this->y;
     player.headingAngle_degree = this->headingAngle_degree;
     player.gunAngle_degree = this->gunAngle_degree;
+    if (player.x != this->x or player.y != this->y)
+    {
+        player.x = this->x;
+        player.y = this->y;
+        player.movementAnimation();
+    }
     player.time = this->time;
-    player.magazine = this->magazine;
+    for (int bulletNo = 0; bulletNo < this->magazine.size(); bulletNo++)
+    {
+        if (player.magazine[bulletNo].state != Shooter::Bullet::travelling)
+            player.magazine[bulletNo] = this->magazine[bulletNo];
+    }
 }
 class Client
 {

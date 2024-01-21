@@ -6,7 +6,7 @@ class Shooter
 	friend void animateDeath(Shooter &, SDL_Renderer *, std::unordered_map<std::string, SDL_Texture *>);
 	friend class State;
 
-  public:
+public:
 	enum bulletType
 	{
 		snowBall,
@@ -37,7 +37,7 @@ class Shooter
 		int shootingAngle_degree;
 	};
 
-  private:
+private:
 	//**** Constants ****
 	int RADIUS, GUN_RADIUS, SPEED, RECOIL; // speed is in ∆pixels/frame;
 	int SCREEN_WIDTH, SCREEN_HEIGHT;
@@ -64,8 +64,10 @@ class Shooter
 	void sprinkleFire(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree, int speed = 5);
 	void animateMoveMagic(int particleCount);
 	void animateMagic();
+	void movementAnimation();
+	void move();
 
-  public:
+public:
 	Shooter() {}
 	Shooter(int arg_SCREEN_WIDTH, int arg_SCREEN_HEIGHT, int arg_x, int arg_y, int magazine_size, std::unordered_map<std::string, SDL_Texture *> arg_images, int RADIUS = 50, int GUN_RADIUS = 20, int SPEED = 7, int RECOIL = 10) : SCREEN_WIDTH(arg_SCREEN_WIDTH), SCREEN_HEIGHT(arg_SCREEN_HEIGHT), images(arg_images), x(arg_x), y(arg_y), health(10), state(none), magazine(magazine_size), RADIUS(RADIUS), GUN_RADIUS(GUN_RADIUS), SPEED(SPEED), RECOIL(RECOIL)
 	{
@@ -89,15 +91,15 @@ class Shooter
 	inline int get_availableBulletCount();
 	inline float get_headingAngle_rad();
 	inline float get_gunAngle_degree();
-	void render(SDL_Renderer * s);
-	void move(int angle_degree);
+	void render(SDL_Renderer *s);
+	inline void move(int angle_degree);
 	inline void rotateGun(int angle_degree);
 	bool shoot(enum bulletType type);
 	inline bool shoot(int shootingAngle_degree, enum bulletType type);
 	void update();
 };
 
-int Shooter::Bullet::RADIUS,Shooter::Bullet::SPEED;
+int Shooter::Bullet::RADIUS, Shooter::Bullet::SPEED;
 
 void Shooter::shift(int dx, int dy)
 {
@@ -261,11 +263,10 @@ void Shooter::render(SDL_Renderer *s)
 	temp_rect = createRect(x, y, 2 * GUN_RADIUS, 2 * GUN_RADIUS);
 	SDL_RenderCopyEx(s, images["gun"], NULL, &temp_rect, gunAngle_degree, NULL, SDL_FLIP_NONE);
 }
-void Shooter::move(int angle_degree)
+void Shooter::movementAnimation()
 {
 	if (not isAlive())
 		return;
-	rotateTo(angle_degree);
 	float speed_factor;
 	switch (state)
 	{
@@ -275,14 +276,34 @@ void Shooter::move(int angle_degree)
 	default:
 		speed_factor = 1;
 	}
-	shift(cos((M_PI / 180) * angle_degree) * SPEED * speed_factor,
-		  sin((M_PI / 180) * angle_degree) * SPEED * speed_factor);
 	animateMoveMagic(2 * speed_factor);
+}
+void Shooter::move()
+{
+	if (not isAlive())
+		return;
+	float speed_factor;
+	switch (state)
+	{
+	case shooter_frozen:
+		speed_factor = (Bullet::FREEZ_PERSISTANCE - statusEffectRemaining) / float(Bullet::FREEZ_PERSISTANCE * Bullet::FREEZING_EFFECT);
+		break;
+	default:
+		speed_factor = 1;
+	}
+	shift(cos((M_PI / 180) * headingAngle_degree) * SPEED * speed_factor,
+		  sin((M_PI / 180) * headingAngle_degree) * SPEED * speed_factor);
+	animateMoveMagic(2 * speed_factor);
+}
+void Shooter::move(int angle_degree)
+{
+	rotateTo(angle_degree);
+	move();
 }
 void Shooter::rotateGun(int angle_degree)
 {
 	gunAngle_degree += angle_degree;
-	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); //keeping angle between 0 to 360 to avoid int overflow in long run
+	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); // keeping angle between 0 to 360 to avoid int overflow in long run
 }
 bool Shooter::shoot(enum bulletType type)
 {
@@ -311,7 +332,7 @@ bool Shooter::shoot(enum bulletType type)
 bool Shooter::shoot(int shootingAngle_degree, enum bulletType type)
 {
 	gunAngle_degree = shootingAngle_degree;
-	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); //keeping angle between 0 to 360 to avoid int overflow in long run
+	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); // keeping angle between 0 to 360 to avoid int overflow in long run
 	return shoot(type);
 }
 void Shooter::update()
