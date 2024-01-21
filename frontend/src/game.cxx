@@ -85,6 +85,7 @@ bool Game::main()
             SDL_RenderClear(this->renderer);
             SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
             SDL_RenderPresent(this->renderer);
+            FPS_manager(FRAME_GAP);
         }
     }
     SDL_SetRelativeMouseMode(SDL_TRUE);
