@@ -7,6 +7,7 @@ class Game
 
     SDL_Renderer *renderer;
     static std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
+    static SDL_Texture *backgroundImage;
     Shooter player1, player2;
     InputManager inputManager;
     Client client;
@@ -18,6 +19,7 @@ public:
     bool main();
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
+SDL_Texture *Game::backgroundImage;
 Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT)
 {
     this->client.joinRandom();
@@ -59,6 +61,7 @@ void Game::loadResources(SDL_Renderer *renderer)
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, "resources/joystickButton.png");
     buttonImages["train"] = IMG_LoadTexture(renderer, "resources/train.png");
     buttonImages["select"] = IMG_LoadTexture(renderer, "resources/select.png");
+    backgroundImage = IMG_LoadTexture(renderer, "resources/background.png");
 }
 bool Game::main()
 {
@@ -78,6 +81,9 @@ bool Game::main()
                     return false;
                 }
             }
+            SDL_RenderClear(this->renderer);
+            SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
+            SDL_RenderPresent(this->renderer);
         }
     }
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -92,7 +98,7 @@ bool Game::main()
         SDL_RenderPresent(this->renderer);
         SDL_RenderClear(this->renderer);
         FPS_manager(FRAME_GAP);
-        if(!client.sendAndRecieve(player1, player2))
+        if (!client.sendAndRecieve(player1, player2))
             return false;
     }
     return true;
