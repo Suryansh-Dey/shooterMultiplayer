@@ -37,19 +37,20 @@ class Client
     {
         bool active = false;
     };
+    uint32_t SCREEN_WIDTH, SCREEN_HEIGHT;
     CURL *curl;
     std::string response;
     static std::string serverURL;
+    unsigned int id = 0;
     // Shared memory with clientThread!!
     State state1, state2;
     std::atomic<bool> clientThreadPermission = true, clientThreadInvoked = false;
-    std::atomic<unsigned int> id = 0;
 
     std::thread clientThread;
 
     static std::string encodeURL(State state, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
     static State decodeURL(std::stringstream data, unsigned int id, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
-    static void clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
+    static void clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT, unsigned int id);
     static size_t storeToStringCallback(void *contents, size_t size, size_t nmemb, std::string *code);
 
 public:
@@ -85,6 +86,8 @@ State Client::decodeURL(std::stringstream data, unsigned int id, uint32_t SCREEN
         state.gameOn = false;
         return state;
     }
+    else if (data.str() == "NULL")
+        return state;
     float val;
     data >> val;
     data.ignore();
@@ -142,7 +145,7 @@ size_t Client::storeToStringCallback(void *contents, size_t size, size_t nmemb, 
     code->append(static_cast<char *>(contents), total_size);
     return total_size;
 }
-void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
+void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT, unsigned int id)
 {
     CURL *curl = curl_easy_init();
     std::string response;
@@ -154,15 +157,15 @@ void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_
             continue;
         // Processing...
         response = "";
-        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?" + Client::encodeURL(client->state1, client->id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, (serverURL + "/update?" + Client::encodeURL(client->state1, id, SCREEN_WIDTH, SCREEN_HEIGHT)).c_str());
         curl_easy_perform(curl);
-        client->state2 = Client::decodeURL(std::stringstream(response), client->id, SCREEN_WIDTH, SCREEN_HEIGHT);
+        client->state2 = Client::decodeURL(std::stringstream(response), id, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         client->clientThreadInvoked = false;
     }
     curl_easy_cleanup(curl);
 }
-Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT)
+Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT)
 {
     Client::serverURL = serverURL;
     curl_global_init(CURL_GLOBAL_ALL);
@@ -176,7 +179,6 @@ Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEI
         fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
         exit(1);
     }
-    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 void Client::joinRandom()
 {
@@ -184,6 +186,7 @@ void Client::joinRandom()
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/join?id=random").c_str());
     curl_easy_perform(this->curl);
     this->id = std::stoi(this->response);
+    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
 }
 void Client::joinByCode(std::string code)
 {
@@ -191,6 +194,7 @@ void Client::joinByCode(std::string code)
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/join?id=" + code).c_str());
     curl_easy_perform(this->curl);
     this->id = std::stoi(this->response);
+    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
 }
 unsigned int Client::getId()
 {
@@ -218,7 +222,8 @@ bool Client::sendAndRecieve(Shooter &player1, Shooter &player2)
 Client::~Client()
 {
     this->clientThreadPermission = false;
-    clientThread.join();
+    if (clientThread.joinable())
+        clientThread.join();
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/quit?id=" + std::to_string(this->id)).c_str());
     curl_easy_perform(this->curl);
     curl_easy_cleanup(curl);
