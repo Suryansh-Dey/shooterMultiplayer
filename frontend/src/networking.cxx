@@ -199,7 +199,7 @@ Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEI
     if (result != CURLE_OK)
     {
         fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
-        exit(1);
+        exit(0);
     }
 }
 void Client::joinRandom()
