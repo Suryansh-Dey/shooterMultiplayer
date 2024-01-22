@@ -5,7 +5,7 @@
 #include <condition_variable>
 class State
 {
-    unsigned int lastUpdateTime;
+    static unsigned int lastUpdateTime;
 
 public:
     bool gameOn = true;
@@ -17,6 +17,9 @@ public:
     void sync(Shooter &player);
     inline bool isUpdated();
 };
+
+unsigned int State::lastUpdateTime = 0;
+
 void State::copy(Shooter &player)
 {
     this->x = player.x;
@@ -25,7 +28,6 @@ void State::copy(Shooter &player)
     this->gunAngle_degree = player.gunAngle_degree;
     this->time = player.time;
     this->magazine = player.magazine;
-    lastUpdateTime = this->time;
 }
 void State::sync(Shooter &player)
 {
@@ -43,11 +45,12 @@ void State::sync(Shooter &player)
         if (player.magazine[bulletNo].state != Shooter::Bullet::travelling)
             player.magazine[bulletNo] = this->magazine[bulletNo];
     }
-    lastUpdateTime = this->time;
 }
 bool State::isUpdated()
 {
-    return this->lastUpdateTime < this->time;
+    bool updated = (State::lastUpdateTime != this->time);
+    State::lastUpdateTime = this->time;
+    return updated;
 }
 class Client
 {
