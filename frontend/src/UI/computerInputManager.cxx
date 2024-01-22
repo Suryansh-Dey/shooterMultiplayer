@@ -14,7 +14,7 @@ class InputManager
 {
     int SCREEN_WIDTH, SCREEN_HEIGHT;
     float MOUSE_SENSITIVITY = 1;
-    Shooter *player;
+    Shooter &player;
     SDL_Texture *image;
 
     BallSelectButtons ballSelectButtons;
@@ -25,7 +25,7 @@ class InputManager
     inline float calulateDTheta(float dx, float dy);
 
 public:
-    InputManager(Shooter *player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT);
+    InputManager(Shooter &player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT);
     bool handelInput();
     void render(SDL_Renderer *s);
 };
@@ -47,7 +47,7 @@ void BallSelectButtons::shoot()
         this->player->shoot(Shooter::bulletType::web);
 }
 
-InputManager::InputManager(Shooter *player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT) : player(player), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), ballSelectButtons(player, images, SCREEN_WIDTH, SCREEN_HEIGHT)
+InputManager::InputManager(Shooter &player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT) : player(player), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), ballSelectButtons(&player, images, SCREEN_WIDTH, SCREEN_HEIGHT)
 {
 }
 bool InputManager::handelInput()
@@ -71,11 +71,11 @@ bool InputManager::handelInput()
             this->ballSelectButtons.shoot();
             break;
         case SDL_MOUSEMOTION:
-            this->player->rotateGun(this->calulateDTheta(event.motion.xrel, event.motion.yrel));
+            this->player.rotateGun(this->calulateDTheta(event.motion.xrel, event.motion.yrel));
         }
     }
     if (this->joystick.isPressed())
-        this->player->move(this->joystick.getAngle_degree());
+        this->player.move(this->joystick.getAngle_degree());
     return true;
 }
 void InputManager::render(SDL_Renderer *renderer)
@@ -138,7 +138,7 @@ void InputManager::unpressButtons(SDL_Event event)
 }
 float InputManager::calulateDTheta(float dx, float dy)
 {
-    float theta = this->player->get_gunAngle_degree();
+    float theta = this->player.get_gunAngle_degree();
     float XdTheta = dx * this->MOUSE_SENSITIVITY * (2 * (theta > 180) - 1);
     float YdTheta = dy * this->MOUSE_SENSITIVITY * (2 * (((theta > 270) and (theta < 360)) or (theta < 90)) - 1);
     return XdTheta + YdTheta;

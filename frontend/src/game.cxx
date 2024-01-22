@@ -20,7 +20,7 @@ public:
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
 SDL_Texture *Game::backgroundImage;
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(NULL, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT)
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT)
 {
     this->client.joinRandom();
     this->gameId = this->client.getId();
@@ -30,7 +30,6 @@ Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : render
 
     this->player1 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY1, 10, Game::shooterImages);
     this->player2 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY2, 10, Game::shooterImages);
-    this->inputManager = InputManager(&(this->player1), this->buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 void Game::loadResources(SDL_Renderer *renderer)
 {
