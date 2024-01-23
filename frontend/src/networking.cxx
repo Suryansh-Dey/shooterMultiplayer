@@ -42,7 +42,7 @@ void State::sync(Shooter &player)
     player.time = this->time;
     for (int bulletNo = 0; bulletNo < this->magazine.size(); bulletNo++)
     {
-        if (player.magazine[bulletNo].state != Shooter::Bullet::travelling)
+        if (player.magazine[bulletNo].state != Shooter::Bullet::travelling and player.magazine[bulletNo].state != this->magazine[bulletNo].state)
             player.magazine[bulletNo] = this->magazine[bulletNo];
     }
 }
