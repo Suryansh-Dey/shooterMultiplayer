@@ -302,6 +302,8 @@ void Shooter::move(int angle_degree)
 }
 void Shooter::rotateGun(int angle_degree)
 {
+	if (not isAlive())
+		return;
 	gunAngle_degree += angle_degree;
 	gunAngle_degree += -360 * (gunAngle_degree > 360) + 360 * (gunAngle_degree < 0); // keeping angle between 0 to 360 to avoid int overflow in long run
 }

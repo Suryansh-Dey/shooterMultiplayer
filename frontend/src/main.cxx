@@ -20,11 +20,11 @@ int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_Renderer *s = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-	Game::loadResources(s);
+	Game::loadResources(s, "../resources");
 
 	while (!quit)
 	{
-		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, s);
+		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, s, "http://localhost:3000");
 		quit = game.main();
 		std::cout << "Match finished\n";
 	}
