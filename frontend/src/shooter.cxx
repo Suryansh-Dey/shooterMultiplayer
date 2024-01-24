@@ -5,6 +5,7 @@ class Shooter
 	friend void collisionHandeler(Shooter &, Shooter &);
 	friend void animateDeath(Shooter &, SDL_Renderer *, std::unordered_map<std::string, SDL_Texture *>);
 	friend class State;
+	friend class Menu;
 
 public:
 	enum bulletType
@@ -61,7 +62,7 @@ private:
 	void inflictDamage(struct Bullet);
 	inline void rotateTo(int angle);
 	void sprinkleSnow(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree = 0, int speed = 0);
-	void sprinkleFire(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree, int speed = 5);
+	void sprinkleFire(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree = 0, int speed = 5);
 	void animateMoveMagic(int particleCount);
 	void animateMagic();
 	void movementAnimation();

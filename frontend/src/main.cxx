@@ -11,8 +11,9 @@
 #include "animation.cxx"
 #include "shooter.cxx"
 #include "networking.cxx"
-#include "UI/UI.cxx"
+#include "UI/gameUI.cxx"
 #include "game.cxx"
+#include "UI/menuUI.cxx"
 int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 500;
 bool quit = false;
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[])
 	while (!quit)
 	{
 		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, s, "http://localhost:3000");
-		quit = game.main();
+		quit = game.run();
 		std::cout << "Match finished\n";
 	}
 	return 0;

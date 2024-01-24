@@ -1,8 +1,9 @@
 class Game
 {
+    friend class Menu;
     //**** ADJUSTABLE CONSTANT PARAMETERS ****
-    const int FPS = 30;
-    const int FRAME_GAP = 1000 / FPS;
+    static constexpr int FPS = 30;
+    static constexpr int FRAME_GAP = 1000 / FPS;
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
 
     SDL_Renderer *renderer;
@@ -16,7 +17,7 @@ class Game
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, std::string serverURL);
     static void loadResources(SDL_Renderer *renderer, std::string path);
-    bool main();
+    bool run();
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
 SDL_Texture *Game::backgroundImage;
@@ -62,7 +63,7 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["select"] = IMG_LoadTexture(renderer, (path + "/select.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
 }
-bool Game::main()
+bool Game::run()
 {
     SDL_SetRelativeMouseMode(SDL_FALSE);
     while (!this->client.getMatch().active or !this->client.initMatch(this->player1, this->player2))
