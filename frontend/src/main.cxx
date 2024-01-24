@@ -20,12 +20,17 @@ bool quit = false;
 int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
-	SDL_Renderer *s = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-	Game::loadResources(s, "../resources");
+	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+	Game::loadResources(renderer, "../resources");
+	Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	while (!quit)
 	{
-		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, s, "http://localhost:3000");
+		Client client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT);
+		quit = menu.run(client, renderer);
+		if (quit)
+			break;
+		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, renderer, client);
 		quit = game.run();
 		std::cout << "Match finished\n";
 	}

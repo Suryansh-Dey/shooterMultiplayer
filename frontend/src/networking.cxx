@@ -78,9 +78,9 @@ class Client
 
 public:
     Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT);
-    void joinRandom();
+    bool joinRandom();
     inline unsigned int getId();
-    void joinByCode(std::string code);
+    bool joinByCode(std::string code);
     Match getMatch();
     bool initMatch(Shooter &player1, Shooter &player2);
     bool sendAndRecieve(Shooter &player1, Shooter &player2);
@@ -192,31 +192,34 @@ Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEI
     Client::serverURL = serverURL;
     curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
-    curl_easy_setopt(this->curl, CURLOPT_URL, serverURL.c_str());
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &(this->response));
-    CURLcode result = curl_easy_perform(this->curl);
-    if (result != CURLE_OK)
-    {
-        fprintf(stderr, "Client::Client()::curl_easy_perform() failed: %s\n", curl_easy_strerror(result));
-        exit(0);
-    }
 }
-void Client::joinRandom()
+bool Client::joinRandom()
 {
+    if (id)
+        return false;
     this->response = "";
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/join?id=random").c_str());
-    curl_easy_perform(this->curl);
+    CURLcode result = curl_easy_perform(this->curl);
+    if (result != CURLE_OK)
+        return false;
     this->id = std::stoi(this->response);
     clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
+    return true;
 }
-void Client::joinByCode(std::string code)
+bool Client::joinByCode(std::string code)
 {
+    if (id)
+        return false;
     this->response = "";
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/join?id=" + code).c_str());
-    curl_easy_perform(this->curl);
+    CURLcode result = curl_easy_perform(this->curl);
+    if (result != CURLE_OK)
+        return false;
     this->id = std::stoi(this->response);
     clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
+    return true;
 }
 unsigned int Client::getId()
 {

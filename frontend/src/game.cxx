@@ -8,22 +8,21 @@ class Game
 
     SDL_Renderer *renderer;
     static std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
-    static SDL_Texture *backgroundImage;
+    static SDL_Texture *backgroundImage, *initializingImage;
     Shooter player1, player2;
     InputManager inputManager;
-    Client client;
+    Client &client;
     unsigned int gameId;
 
 public:
-    Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, std::string serverURL);
+    Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client);
     static void loadResources(SDL_Renderer *renderer, std::string path);
     bool run();
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
-SDL_Texture *Game::backgroundImage;
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, std::string serverURL) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client(serverURL, SCREEN_WIDTH, SCREEN_HEIGHT)
+SDL_Texture *Game::backgroundImage, *Game::initializingImage;
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client(client)
 {
-    this->client.joinRandom();
     this->gameId = this->client.getId();
     float NormalPositionY1 = 0.2, NormalPositionY2 = 0.8;
     if (this->gameId % 10 == 1)
@@ -59,14 +58,13 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["web"] = IMG_LoadTexture(renderer, (path + "/web.png").c_str());
     buttonImages["joystickPad"] = IMG_LoadTexture(renderer, (path + "/joystickPad.png").c_str());
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, (path + "/joystickButton.png").c_str());
-    buttonImages["train"] = IMG_LoadTexture(renderer, (path + "/train.png").c_str());
-    buttonImages["select"] = IMG_LoadTexture(renderer, (path + "/select.png").c_str());
+    buttonImages["joinRandom"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
+    initializingImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
 }
 bool Game::run()
 {
-    SDL_SetRelativeMouseMode(SDL_FALSE);
-    while (!this->client.getMatch().active or !this->client.initMatch(this->player1, this->player2))
+    while (not this->client.initMatch(this->player1, this->player2))
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -84,7 +82,7 @@ bool Game::run()
             }
         }
         SDL_RenderClear(this->renderer);
-        SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
+        SDL_RenderCopy(this->renderer, initializingImage, NULL, NULL);
         SDL_RenderPresent(this->renderer);
         FPS_manager(FRAME_GAP);
     }
