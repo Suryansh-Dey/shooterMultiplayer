@@ -10,7 +10,7 @@ ButtonIcon::ButtonIcon(SDL_Texture *image, int x, int y, int w, int h) : Icon(im
 }
 bool ButtonIcon::isPressed(int x, int y)
 {
-    return abs(rect.x - x) < rect.w / 2 and abs(rect.y - y) < rect.h / 2;
+    return x - rect.x < rect.w and y - rect.y < rect.h;
 }
 
 class Menu
@@ -30,7 +30,6 @@ Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT) : SCREEN_WIDTH(SCREEN_WIDTH), SC
 void Menu::pressButtons(int x, int y, Client &client)
 {
     if (joinRandomIcon.isPressed(x, y))
-        client.joinRandom();
         client.joinRandom();
 }
 bool Menu::run(Client &client, SDL_Renderer *renderer)
