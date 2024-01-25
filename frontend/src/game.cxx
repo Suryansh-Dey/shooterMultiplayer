@@ -60,7 +60,7 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, (path + "/joystickButton.png").c_str());
     buttonImages["joinRandom"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
-    initializingImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
+    initializingImage = IMG_LoadTexture(renderer, (path + "/loadingScreen.png").c_str());
 }
 bool Game::run()
 {

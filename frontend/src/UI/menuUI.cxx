@@ -16,7 +16,6 @@ bool ButtonIcon::isPressed(int x, int y)
 class Menu
 {
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
-    uint32_t time = 0;
     ButtonIcon cancelIcon, exitIcon, joinRandomIcon, generateCodeIcon, joinByCodeIcon;
     Shooter particleEffects;
     void pressButtons(int x, int y, Client &client);
@@ -32,17 +31,16 @@ void Menu::pressButtons(int x, int y, Client &client)
 {
     if (joinRandomIcon.isPressed(x, y))
         client.joinRandom();
+        client.joinRandom();
 }
 bool Menu::run(Client &client, SDL_Renderer *renderer)
 {
     SDL_SetRelativeMouseMode(SDL_FALSE);
-    while (!client.getMatch().active)
+    while (true)
     {
         SDL_Event event;
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
-        mouseX *= SCREEN_WIDTH;
-        mouseY *= SCREEN_HEIGHT;
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
@@ -51,21 +49,26 @@ bool Menu::run(Client &client, SDL_Renderer *renderer)
                 return true;
                 break;
             case SDL_MOUSEBUTTONDOWN:
-                particleEffects.sprinkleFire(mouseX, mouseY, 20, 10);
+                particleEffects.sprinkleFire(mouseX, mouseY, 30, 30, 0, 0);
                 pressButtons(mouseX, mouseY, client);
                 break;
             case SDL_MOUSEMOTION:
-                particleEffects.sprinkleSnow(mouseX, mouseY, 10, 10, 90);
+                particleEffects.sprinkleSnow(mouseX, mouseY, 5, 10, 90, 10);
                 break;
             }
         }
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, Game::backgroundImage, NULL, NULL);
-        particleEffects.sprinkler.render(renderer, time);
-        joinByCodeIcon.render(renderer);
+        joinRandomIcon.render(renderer);
+        particleEffects.sprinkler.render(renderer, particleEffects.time);
         SDL_RenderPresent(renderer);
         FPS_manager(Game::FRAME_GAP);
-        time++;
+        particleEffects.time++;
+        if (client.getId())
+        {
+            if (client.getMatch().active)
+                break;
+        }
     }
     return false;
 }

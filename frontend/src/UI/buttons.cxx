@@ -9,7 +9,7 @@ protected:
 
 public:
     Icon(SDL_Texture *image, int x, int y, int w, int h);
-    void render(SDL_Renderer *renderer, Uint8 intensity);
+    void render(SDL_Renderer *renderer, uint8_t intensity);
 };
 
 class Button : public Icon
@@ -58,7 +58,7 @@ Icon::Icon(SDL_Texture *image, int x, int y, int w, int h) : image(image)
 {
     this->rect = createRect(x , y , w , h );
 }
-void Icon::render(SDL_Renderer *renderer, Uint8 intensity = 255)
+void Icon::render(SDL_Renderer *renderer, uint8_t intensity = 255)
 {
     SDL_SetTextureAlphaMod(this->image, intensity);
     SDL_RenderCopy(renderer, this->image, NULL, &(this->rect));
