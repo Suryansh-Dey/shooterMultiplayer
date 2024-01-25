@@ -20,14 +20,15 @@ bool quit = false;
 int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_EVERYTHING);
+	TTF_Init();
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 	Game::loadResources(renderer, "../resources");
-	Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT);
+	Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT, renderer);
 
 	while (!quit)
 	{
 		Client client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT);
-		quit = menu.run(client, renderer);
+		quit = menu.run(client);
 		if (quit)
 			break;
 		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, renderer, client);

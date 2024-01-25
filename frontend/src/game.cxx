@@ -1,14 +1,19 @@
 class Game
 {
     friend class Menu;
+
+public:
     //**** ADJUSTABLE CONSTANT PARAMETERS ****
     static constexpr int FPS = 30;
     static constexpr int FRAME_GAP = 1000 / FPS;
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-    SDL_Renderer *renderer;
     static std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
-    static SDL_Texture *backgroundImage, *initializingImage;
+    static SDL_Texture *backgroundImage;
+    static TTF_Font *font;
+
+private:
+    SDL_Renderer *renderer;
     Shooter player1, player2;
     InputManager inputManager;
     Client &client;
@@ -20,7 +25,8 @@ public:
     bool run();
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
-SDL_Texture *Game::backgroundImage, *Game::initializingImage;
+SDL_Texture *Game::backgroundImage;
+TTF_Font *Game::font;
 Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client(client)
 {
     this->gameId = this->client.getId();
@@ -58,9 +64,9 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["web"] = IMG_LoadTexture(renderer, (path + "/web.png").c_str());
     buttonImages["joystickPad"] = IMG_LoadTexture(renderer, (path + "/joystickPad.png").c_str());
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, (path + "/joystickButton.png").c_str());
-    buttonImages["joinRandom"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
+    buttonImages["button"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
-    initializingImage = IMG_LoadTexture(renderer, (path + "/loadingScreen.png").c_str());
+    font = TTF_OpenFont((path + "/bombing.ttf").c_str(), 24);
 }
 bool Game::run()
 {
@@ -82,7 +88,7 @@ bool Game::run()
             }
         }
         SDL_RenderClear(this->renderer);
-        SDL_RenderCopy(this->renderer, initializingImage, NULL, NULL);
+        SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
         SDL_RenderPresent(this->renderer);
         FPS_manager(FRAME_GAP);
     }
