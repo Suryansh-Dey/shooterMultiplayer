@@ -2,71 +2,18 @@
 #include <stdexcept>
 #include <SDL2/SDL_ttf.h>
 
-class TextRenderer
-{
-public:
-    TextRenderer() {}
-    TextRenderer(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color)
-        : renderer(renderer), text(text), font(font), color(color)
-    {
-        createTexture();
-    }
-
-    ~TextRenderer()
-    {
-        SDL_DestroyTexture(texture);
-    }
-
-    void render(int x, int y)
-    {
-        SDL_Rect destRect;
-        destRect.x = x - textureWidth / 2;
-        destRect.y = y - textureHeight / 2;
-        destRect.w = textureWidth;
-        destRect.h = textureHeight;
-        SDL_RenderCopy(renderer, texture, nullptr, &destRect);
-    }
-
-private:
-    SDL_Renderer *renderer;
-    std::string text;
-    TTF_Font *font;
-    SDL_Color color;
-    SDL_Texture *texture;
-    int textureWidth, textureHeight;
-
-    void createTexture()
-    {
-        SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
-        if (surface == nullptr)
-        {
-            std::cerr << "Failed to create surface: " << SDL_GetError() << std::endl;
-            return;
-        }
-
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
-        if (texture == nullptr)
-        {
-            std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
-            SDL_FreeSurface(surface);
-            return;
-        }
-
-        textureWidth = surface->w;
-        textureHeight = surface->h;
-
-        SDL_FreeSurface(surface);
-    }
-};
-
 class Icon
 {
+    bool allocatedImage = false;
+
 protected:
     SDL_Texture *image = NULL;
     SDL_Rect rect;
 
 public:
     Icon(SDL_Texture *image, int x, int y, int w, int h);
+    Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y);
+    ~Icon();
     void render(SDL_Renderer *renderer, uint8_t intensity);
 };
 
@@ -115,6 +62,32 @@ public:
 Icon::Icon(SDL_Texture *image, int x, int y, int w, int h) : image(image)
 {
     this->rect = createRect(x, y, w, h);
+}
+Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) : allocatedImage(true)
+{
+
+    SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
+    if (surface == nullptr)
+    {
+        std::cerr << "Failed to create surface: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    this->image = SDL_CreateTextureFromSurface(renderer, surface);
+    if (this->image == nullptr)
+    {
+        std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(surface);
+        return;
+    }
+    this->rect = createRect(x, y, surface->w, surface->h);
+
+    SDL_FreeSurface(surface);
+}
+Icon::~Icon()
+{
+    if (this->allocatedImage)
+        SDL_DestroyTexture(this->image);
 }
 void Icon::render(SDL_Renderer *renderer, uint8_t intensity = 255)
 {

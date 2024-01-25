@@ -1,7 +1,7 @@
 #include "buttons.cxx"
 class ButtonIcon : public Icon
 {
-    TextRenderer name;
+    Icon name;
     bool active;
 
 public:
@@ -11,9 +11,8 @@ public:
     inline void enable();
     void render(SDL_Renderer *renderer, uint8_t alpha = 255);
 };
-ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active) : Icon(Game::buttonImages["button"], x, y, w, h), active(active)
+ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active) : Icon(Game::buttonImages["button"], x, y, w, h), name(renderer, name, Game::font, {255, 255, 0, 255}, x, y), active(active)
 {
-    this->name = TextRenderer(renderer, name, Game::font, {255, 255, 0, 255});
 }
 bool ButtonIcon::isPressed(int x, int y)
 {
@@ -32,7 +31,7 @@ void ButtonIcon::render(SDL_Renderer *renderer, uint8_t alpha)
     if (!this->active)
         return;
     Icon::render(renderer, alpha);
-    name.render(this->rect.x + this->rect.w / 2, this->rect.y + this->rect.h / 2);
+    name.render(renderer, alpha);
 }
 
 class Menu

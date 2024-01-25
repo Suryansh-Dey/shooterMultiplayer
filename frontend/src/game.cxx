@@ -66,7 +66,7 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, (path + "/joystickButton.png").c_str());
     buttonImages["button"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
-    font = TTF_OpenFont((path + "/bombing.ttf").c_str(), 24);
+    font = TTF_OpenFont((path + "/bombing.ttf").c_str(), 60);
 }
 bool Game::run()
 {
