@@ -157,7 +157,7 @@ inline void Shooter::rotateTo(int angle)
 }
 void Shooter::sprinkleSnow(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree, int speed)
 {
-	static constexpr int lifeTime = 20, startRadius = 10, endRadius = 5, trailingOpacity = 150;
+	int lifeTime = 20, startRadius = SCREEN_HEIGHT * 0.01, endRadius = SCREEN_HEIGHT * 0.005, trailingOpacity = 150;
 	sprinkleRandomness++;
 	while (particleCount--)
 	{
@@ -171,7 +171,7 @@ void Shooter::sprinkleSnow(int x, int y, int particleCount, int sprinkleRandomne
 }
 void Shooter::sprinkleFire(int x, int y, int particleCount, int sprinkleRandomness, int movementAngle_degree, int speed)
 {
-	static constexpr int lifeTime = 10, startRadius = 15;
+	int lifeTime = 10, startRadius = SCREEN_HEIGHT * 0.03;
 	sprinkleRandomness++;
 	while (particleCount--)
 	{

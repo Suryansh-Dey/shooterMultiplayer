@@ -16,7 +16,7 @@ ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, i
 }
 bool ButtonIcon::isPressed(int x, int y)
 {
-    return x - rect.x < rect.w and y - rect.y < rect.h;
+    return x - rect.x < rect.w and y - rect.y < rect.h and active;
 }
 void ButtonIcon::disable()
 {
@@ -73,8 +73,8 @@ bool Menu::run(Client &client)
                 this->pressButtons(event.motion.x, event.motion.y, client);
                 break;
             case SDL_MOUSEMOTION:
-                int distance = sqrt(event.motion.xrel * event.motion.xrel + event.motion.yrel * event.motion.yrel);
-                this->particleEffects.sprinkleSnow(event.motion.x, event.motion.y, distance, 0.5f * distance, 90, 10);
+                uint32_t distance = sqrt(event.motion.xrel * event.motion.xrel + event.motion.yrel * event.motion.yrel);
+                this->particleEffects.sprinkleSnow(event.motion.x, event.motion.y, distance, 0.5f * distance, 90, 0.1f * distance);
                 break;
             }
         }
