@@ -16,7 +16,7 @@ ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, i
 }
 bool ButtonIcon::isPressed(int x, int y)
 {
-    return x - rect.x < rect.w and y - rect.y < rect.h and active;
+    return active and x - rect.x < rect.w and x - rect.x > 0 and y - rect.y < rect.h and y - rect.y > 0;
 }
 void ButtonIcon::disable()
 {
@@ -37,7 +37,7 @@ void ButtonIcon::render(SDL_Renderer *renderer, uint8_t alpha)
 class Menu
 {
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
-    ButtonIcon cancelIcon, exitIcon, joinRandomIcon, generateCodeIcon, joinByCodeIcon;
+    ButtonIcon cancelIcon, exitIcon, startIcon, joinRandomIcon, generateCodeIcon, joinByCodeIcon;
     Shooter particleEffects;
     SDL_Renderer *renderer;
     void pressButtons(int x, int y, Client &client);
@@ -46,11 +46,18 @@ public:
     Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
     bool run(Client &client);
 };
-Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.1 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.1 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.1 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
+Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.1 * SCREEN_WIDTH, 0.8 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.15 * SCREEN_WIDTH, 0.6 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.15 * SCREEN_WIDTH, 0.4 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
 {
 }
 void Menu::pressButtons(int x, int y, Client &client)
 {
+    if (this->startIcon.isPressed(x, y))
+    {
+        this->joinRandomIcon.enable();
+        this->joinByCodeIcon.enable();
+        this->generateCodeIcon.enable();
+        this->startIcon.disable();
+    }
     if (this->joinRandomIcon.isPressed(x, y))
         client.joinRandom();
 }
@@ -82,6 +89,7 @@ bool Menu::run(Client &client)
         SDL_RenderCopy(renderer, Game::backgroundImage, NULL, NULL);
         this->cancelIcon.render(renderer);
         this->exitIcon.render(renderer);
+        this->startIcon.render(renderer);
         this->generateCodeIcon.render(renderer);
         this->joinByCodeIcon.render(renderer);
         this->joinRandomIcon.render(renderer);

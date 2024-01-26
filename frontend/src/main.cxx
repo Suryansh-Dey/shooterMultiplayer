@@ -23,10 +23,10 @@ int main(int argc, char *argv[])
 	TTF_Init();
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 	Game::loadResources(renderer, "../resources");
-	Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT, renderer);
 
 	while (!quit)
 	{
+		Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT, renderer);
 		Client client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT);
 		quit = menu.run(client);
 		if (quit)
