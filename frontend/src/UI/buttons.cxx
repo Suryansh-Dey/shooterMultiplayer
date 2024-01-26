@@ -4,7 +4,7 @@
 
 class Icon
 {
-    bool allocatedImage = false;
+    bool imageOwner = false;
 
 protected:
     SDL_Texture *image = NULL;
@@ -13,6 +13,8 @@ protected:
 public:
     Icon(SDL_Texture *image, int x, int y, int w, int h);
     Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y);
+    Icon(const Icon &other);
+    Icon &operator=(const Icon &other);
     ~Icon();
     void render(SDL_Renderer *renderer, uint8_t intensity);
 };
@@ -63,7 +65,7 @@ Icon::Icon(SDL_Texture *image, int x, int y, int w, int h) : image(image)
 {
     this->rect = createRect(x, y, w, h);
 }
-Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) : allocatedImage(true)
+Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) : imageOwner(true)
 {
 
     SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
@@ -84,9 +86,32 @@ Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_
 
     SDL_FreeSurface(surface);
 }
+Icon::Icon(const Icon &other) : imageOwner(false), image(other.image), rect(other.rect)
+{
+    if (this->imageOwner)
+    {
+        std::cerr << "Copy constructor of Icon constructed with: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) cannot be used\n";
+        exit(1);
+    }
+}
+Icon &Icon::operator=(const Icon &other)
+{
+    if (other.imageOwner)
+    {
+        std::cerr << "Copy constructor of Icon constructed with: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) cannot be used\n";
+        exit(1);
+    }
+    else
+    {
+        this->image = other.image;
+        this->rect = other.rect;
+        this->imageOwner = false;
+    }
+    return *this;
+}
 Icon::~Icon()
 {
-    if (this->allocatedImage)
+    if (this->imageOwner)
         SDL_DestroyTexture(this->image);
 }
 void Icon::render(SDL_Renderer *renderer, uint8_t intensity = 255)
