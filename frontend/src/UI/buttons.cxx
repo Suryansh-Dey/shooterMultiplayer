@@ -4,7 +4,7 @@
 
 class Icon
 {
-    bool imageOwner = false;
+    bool imageOwner = false, isTemporaryInstance = false;
 
 protected:
     SDL_Texture *image = NULL;
@@ -12,10 +12,11 @@ protected:
 
 public:
     Icon(SDL_Texture *image, int x, int y, int w, int h);
-    Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y);
+    Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance = false);
     Icon(const Icon &other);
     Icon &operator=(const Icon &other);
     ~Icon();
+    inline void change(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color);
     void render(SDL_Renderer *renderer, uint8_t intensity);
 };
 
@@ -65,7 +66,7 @@ Icon::Icon(SDL_Texture *image, int x, int y, int w, int h) : image(image)
 {
     this->rect = createRect(x, y, w, h);
 }
-Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) : imageOwner(true)
+Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance) : imageOwner(true), isTemporaryInstance(isTemporaryInstance)
 {
 
     SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
@@ -74,7 +75,6 @@ Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_
         std::cerr << "Failed to create surface: " << SDL_GetError() << std::endl;
         return;
     }
-
     this->image = SDL_CreateTextureFromSurface(renderer, surface);
     if (this->image == nullptr)
     {
@@ -83,36 +83,57 @@ Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_
         return;
     }
     this->rect = createRect(x, y, surface->w, surface->h);
-
     SDL_FreeSurface(surface);
 }
-Icon::Icon(const Icon &other) : imageOwner(false), image(other.image), rect(other.rect)
+Icon::Icon(const Icon &other) : imageOwner(other.imageOwner and other.isTemporaryInstance), image(other.image), rect(other.rect)
 {
-    if (this->imageOwner)
+    if (other.imageOwner and not other.isTemporaryInstance)
     {
-        std::cerr << "Copy constructor of Icon constructed with: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) cannot be used\n";
+        std::cerr << "Not allowed to invoke copy constructor with Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y)\n";
         exit(1);
     }
 }
 Icon &Icon::operator=(const Icon &other)
 {
-    if (other.imageOwner)
+    if (this->imageOwner and not this->isTemporaryInstance)
+        SDL_DestroyTexture(this->image);
+    if (other.imageOwner and not other.isTemporaryInstance)
     {
-        std::cerr << "Copy constructor of Icon constructed with: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y) cannot be used\n";
+        std::cerr << "Not allowed to invoke copy constructor with Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y)\n";
         exit(1);
     }
     else
     {
         this->image = other.image;
         this->rect = other.rect;
-        this->imageOwner = false;
+        this->imageOwner = other.imageOwner;
     }
     return *this;
 }
 Icon::~Icon()
 {
+    if (this->imageOwner and not this->isTemporaryInstance)
+        SDL_DestroyTexture(this->image);
+}
+void Icon::change(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color)
+{
     if (this->imageOwner)
         SDL_DestroyTexture(this->image);
+    SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
+    if (surface == nullptr)
+    {
+        std::cerr << "Failed to create surface: " << SDL_GetError() << std::endl;
+        return;
+    }
+    this->image = SDL_CreateTextureFromSurface(renderer, surface);
+    if (this->image == nullptr)
+    {
+        std::cerr << "Failed to create texture: " << SDL_GetError() << std::endl;
+        SDL_FreeSurface(surface);
+        return;
+    }
+    this->rect = createRect(this->rect.x, this->rect.y, surface->w, surface->h);
+    SDL_FreeSurface(surface);
 }
 void Icon::render(SDL_Renderer *renderer, uint8_t intensity = 255)
 {

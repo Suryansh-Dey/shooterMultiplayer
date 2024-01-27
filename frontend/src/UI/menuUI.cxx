@@ -1,37 +1,49 @@
 #include "buttons.cxx"
-class ButtonIcon : public Icon
+class DialogueBox : public Icon
 {
-    Icon name;
+protected:
+    std::vector<Icon> text;
     bool active;
 
 public:
-    ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active = true);
-    inline bool isPressed(int x, int y);
+    DialogueBox(SDL_Renderer *renderer, std::string name, SDL_Texture *images, int x, int y, int w, int h, bool active = true);
     inline void disable();
     inline void enable();
     void render(SDL_Renderer *renderer, uint8_t alpha = 255);
 };
-ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active) : Icon(Game::buttonImages["button"], x, y, w, h), name(renderer, name, Game::font, {255, 255, 0, 255}, x, y), active(active)
+DialogueBox::DialogueBox(SDL_Renderer *renderer, std::string text, SDL_Texture *image, int x, int y, int w, int h, bool active) : Icon(image, x, y, w, h), active(active)
+{
+    this->text.emplace_back(Icon(renderer, text, Game::font, {255, 255, 0, 255}, x, y, true));
+}
+void DialogueBox::disable()
+{
+    this->active = false;
+}
+void DialogueBox::enable()
+{
+    this->active = true;
+}
+void DialogueBox::render(SDL_Renderer *renderer, uint8_t alpha)
+{
+    if (!this->active)
+        return;
+    Icon::render(renderer, alpha);
+    for (Icon &line : this->text)
+        line.render(renderer, alpha);
+}
+
+class ButtonIcon : public DialogueBox
+{
+public:
+    ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active = true);
+    inline bool isPressed(int x, int y);
+};
+ButtonIcon::ButtonIcon(SDL_Renderer *renderer, std::string name, int x, int y, int w, int h, bool active) : DialogueBox(renderer, name, Game::buttonImages["button"], x, y, w, h, true)
 {
 }
 bool ButtonIcon::isPressed(int x, int y)
 {
     return active and x - rect.x < rect.w and x - rect.x > 0 and y - rect.y < rect.h and y - rect.y > 0;
-}
-void ButtonIcon::disable()
-{
-    this->active = false;
-}
-void ButtonIcon::enable()
-{
-    this->active = true;
-}
-void ButtonIcon::render(SDL_Renderer *renderer, uint8_t alpha)
-{
-    if (!this->active)
-        return;
-    Icon::render(renderer, alpha);
-    name.render(renderer, alpha);
 }
 
 class Menu
