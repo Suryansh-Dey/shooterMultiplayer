@@ -5,17 +5,22 @@
 class Icon
 {
     bool imageOwner = false, isTemporaryInstance = false;
+    SDL_Texture *image = NULL;
 
 protected:
-    SDL_Texture *image = NULL;
     SDL_Rect rect;
 
 public:
     Icon(SDL_Texture *image, int x, int y, int w, int h);
-    Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance = false);
+    Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance = false);
     Icon(const Icon &other);
     Icon &operator=(const Icon &other);
     ~Icon();
+    inline float getAspectRatio();
+    inline void setRect(int x, int y, int w, int h);
+    inline void setRectPosition(int x, int y);
+    inline void setRectDimention(int w, int h);
+    inline SDL_Rect getRect();
     inline void change(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color);
     void render(SDL_Renderer *renderer, uint8_t intensity);
 };
@@ -66,7 +71,7 @@ Icon::Icon(SDL_Texture *image, int x, int y, int w, int h) : image(image)
 {
     this->rect = createRect(x, y, w, h);
 }
-Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance) : imageOwner(true), isTemporaryInstance(isTemporaryInstance)
+Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance) : imageOwner(true), isTemporaryInstance(isTemporaryInstance)
 {
 
     SDL_Surface *surface = TTF_RenderText_Solid(font, text.c_str(), color);
@@ -82,7 +87,8 @@ Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_
         SDL_FreeSurface(surface);
         return;
     }
-    this->rect = createRect(x, y, surface->w, surface->h);
+    w *= text.length();
+    this->rect = createRect(x, y, w, w * float(surface->h) / surface->w);
     SDL_FreeSurface(surface);
 }
 Icon::Icon(const Icon &other) : imageOwner(other.imageOwner and other.isTemporaryInstance), image(other.image), rect(other.rect)
@@ -104,9 +110,9 @@ Icon &Icon::operator=(const Icon &other)
     }
     else
     {
+        this->imageOwner = other.imageOwner;
         this->image = other.image;
         this->rect = other.rect;
-        this->imageOwner = other.imageOwner;
     }
     return *this;
 }
@@ -114,6 +120,28 @@ Icon::~Icon()
 {
     if (this->imageOwner and not this->isTemporaryInstance)
         SDL_DestroyTexture(this->image);
+}
+float Icon::getAspectRatio()
+{
+    int width, height;
+    SDL_QueryTexture(image, NULL, NULL, &width, &height);
+    return float(height) / width;
+}
+void Icon::setRect(int x, int y, int w, int h)
+{
+    this->rect = createRect(x, y, w, h);
+}
+void Icon::setRectPosition(int x, int y)
+{
+    this->rect = createRect(x, y, this->rect.w, this->rect.h);
+}
+void Icon::setRectDimention(int w, int h)
+{
+    this->rect = createRect(this->rect.x + this->rect.w / 2, this->rect.y + this->rect.h / 2, w, h);
+}
+SDL_Rect Icon::getRect()
+{
+    return this->rect;
 }
 void Icon::change(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color)
 {
