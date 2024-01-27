@@ -162,6 +162,7 @@ void Icon::change(SDL_Renderer *renderer, const std::string &text, TTF_Font *fon
     }
     this->rect = createRect(this->rect.x, this->rect.y, surface->w, surface->h);
     SDL_FreeSurface(surface);
+    this->imageOwner = true;
 }
 void Icon::render(SDL_Renderer *renderer, uint8_t intensity = 255)
 {
