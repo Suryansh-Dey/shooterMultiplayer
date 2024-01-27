@@ -95,7 +95,7 @@ Icon::Icon(const Icon &other) : imageOwner(other.imageOwner and other.isTemporar
 {
     if (other.imageOwner and not other.isTemporaryInstance)
     {
-        std::cerr << "Not allowed to invoke copy constructor with Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y)\n";
+        std::cerr << "ERROR: Not allowed to invoke copy constructor with Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance = false)\nNote: Set isTemporaryInstance = true to make a temporary Instance which shouldn't be used for any perpose except for invoking copy constructor";
         exit(1);
     }
 }
@@ -105,7 +105,7 @@ Icon &Icon::operator=(const Icon &other)
         SDL_DestroyTexture(this->image);
     if (other.imageOwner and not other.isTemporaryInstance)
     {
-        std::cerr << "Not allowed to invoke copy constructor with Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y)\n";
+        std::cerr << "ERROR: Not allowed to assign a Icon constructed by: Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, bool isTemporaryInstance = false)\nNote: Set isTemporaryInstance = true to make a temporary Instance which shouldn't be used for any perpose except for invoking copy constructor";
         exit(1);
     }
     else
