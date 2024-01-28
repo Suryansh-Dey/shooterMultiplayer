@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
 		quit = menu.run(client);
 		if (quit)
 			break;
+		else if (not client.getId())
+			continue;
 		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, renderer, client);
 		quit = game.run();
 		std::cout << "Match finished\n";

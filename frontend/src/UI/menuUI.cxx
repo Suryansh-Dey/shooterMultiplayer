@@ -13,6 +13,7 @@ protected:
 public:
     DialogueBox(SDL_Renderer *renderer, SDL_Texture *images, int x, int y, int w, int h, bool active = true, float margin_normal = 0.1);
     DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *image, int x, int y, int w, int h, bool active = true, float margin_normal = 0.1);
+    inline bool isActive();
     inline void disable();
     inline void enable();
     inline void changeText(SDL_Renderer *renderer, std::vector<std::string> &text, TTF_Font *font, SDL_Color color);
@@ -46,6 +47,10 @@ DialogueBox::DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *
     else
         this->disable();
 }
+bool DialogueBox::isActive()
+{
+    return this->active;
+}
 void DialogueBox::disable()
 {
     this->targetHeight = 0;
@@ -62,7 +67,8 @@ void DialogueBox::enable()
 }
 void DialogueBox::changeText(SDL_Renderer *renderer, std::vector<std::string> &text, TTF_Font *font, SDL_Color color)
 {
-    this->text = std::vector<Icon>(text.size());
+    if (this->text.size() != text.size())
+        this->text = std::vector<Icon>(text.size());
     for (int line_no = 0; line_no < this->text.size(); line_no++)
         this->text[line_no].change(renderer, text[line_no], font, color);
     this->format();
@@ -107,16 +113,17 @@ class Menu
     DialogueBox dialogueBox;
     Shooter particleEffects;
     SDL_Renderer *renderer;
-    void pressButtons(int x, int y, Client &client);
+    std::string code;
+    bool pressButtons(int x, int y, Client &client);
 
 public:
     Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
     bool run(Client &client);
 };
-Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.5 * SCREEN_WIDTH, 0.7 * SCREEN_HEIGHT, 0.25 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.5 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), dialogueBox(renderer, Game::buttonImages["button"], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
+Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.5 * SCREEN_WIDTH, 0.7 * SCREEN_HEIGHT, 0.25 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.5 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), dialogueBox(renderer, Game::buttonImages["box"], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4, 2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
 {
 }
-void Menu::pressButtons(int x, int y, Client &client)
+bool Menu::pressButtons(int x, int y, Client &client)
 {
     if (this->startIcon.isPressed(x, y))
     {
@@ -127,31 +134,72 @@ void Menu::pressButtons(int x, int y, Client &client)
     }
     else if (this->joinRandomIcon.isPressed(x, y))
     {
-        client.joinRandom();
+        std::vector<std::string> text;
+        SDL_Colour color;
+        if (client.joinRandom())
+        {
+            color = {0, 0, 0, 255};
+            text = {std::string("On queue"), std::string("searching...")};
+        }
+        else
+        {
+            color = {150, 0, 0, 255};
+            text = {std::string("Server unreachable!"), std::string("check your internet"), std::string("Try again")};
+        }
+        this->dialogueBox.changeText(this->renderer, text, Game::font, color);
+        this->dialogueBox.enable();
         goto matchMaking;
     }
     else if (this->generateCodeIcon.isPressed(x, y))
     {
-        client.generateCode();
-        std::vector text = {std::string("Team code:"), std::to_string(client.getId())};
-        this->dialogueBox.changeText(this->renderer, text, Game::font, {255, 255, 255, 255});
+        std::vector<std::string> text;
+        SDL_Colour color;
+        if (client.generateCode())
+        {
+            color = {0, 0, 0, 255};
+            text = {std::string("Team code:"), std::to_string(client.getId())};
+        }
+        else
+        {
+            color = {150, 0, 0, 255};
+            text = {std::string("Server unreachable!"), std::string("check your internet"), std::string("Try again")};
+        }
+        this->dialogueBox.changeText(this->renderer, text, Game::font, color);
         this->dialogueBox.enable();
         goto matchMaking;
     }
-    else
+    else if (this->joinByCodeIcon.isPressed(x, y))
     {
-        this->joinRandomIcon.disable();
-        this->joinByCodeIcon.disable();
-        this->generateCodeIcon.disable();
-        this->startIcon.enable();
+        std::vector<std::string> text;
+        if (this->code.length())
+            text = {std::string("Enter code:"), this->code};
+        else
+            text = {std::string("Enter code:"), std::string("_ _ _ _ _ _")};
+        this->dialogueBox.changeText(this->renderer, text, Game::font, {0, 0, 0, 255});
+        this->dialogueBox.enable();
     }
-    return;
+    else if (this->cancelIcon.isPressed(x, y))
+        return true;
+    else if (not this->cancelIcon.isActive())
+    {
+        if (this->dialogueBox.isActive())
+            this->dialogueBox.disable();
+        else
+        {
+            this->joinRandomIcon.disable();
+            this->joinByCodeIcon.disable();
+            this->generateCodeIcon.disable();
+            this->startIcon.enable();
+        }
+    }
+    return false;
 matchMaking:
     this->joinRandomIcon.disable();
     this->joinByCodeIcon.disable();
     this->generateCodeIcon.disable();
     this->startIcon.disable();
     this->cancelIcon.enable();
+    return false;
 }
 bool Menu::run(Client &client)
 {
@@ -166,10 +214,70 @@ bool Menu::run(Client &client)
             case SDL_QUIT:
                 return true;
             case SDL_MOUSEBUTTONDOWN:
-                if (this->exitIcon.isPressed(event.motion.x, event.motion.y))
-                    return true;
                 this->particleEffects.sprinkleFire(event.motion.x, event.motion.y, 30, 30, 0, 0);
-                this->pressButtons(event.motion.x, event.motion.y, client);
+                if (this->pressButtons(event.motion.x, event.motion.y, client))
+                    return false;
+                else if (this->exitIcon.isPressed(event.motion.x, event.motion.y))
+                    return true;
+                break;
+            case SDL_KEYDOWN:
+                if (not this->dialogueBox.isActive())
+                    break;
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_0:
+                    this->code.append("0");
+                    break;
+                case SDLK_1:
+                    this->code.append("1");
+                    break;
+                case SDLK_2:
+                    this->code.append("2");
+                    break;
+                case SDLK_3:
+                    this->code.append("3");
+                    break;
+                case SDLK_4:
+                    this->code.append("4");
+                    break;
+                case SDLK_5:
+                    this->code.append("5");
+                    break;
+                case SDLK_6:
+                    this->code.append("6");
+                    break;
+                case SDLK_7:
+                    this->code.append("7");
+                    break;
+                case SDLK_8:
+                    this->code.append("8");
+                    break;
+                case SDLK_9:
+                    this->code.append("9");
+                    break;
+                case SDLK_BACKSPACE:
+                    this->code.pop_back();
+                    break;
+                case SDLK_RETURN:
+                    if (not client.joinByCode(this->code))
+                    {
+                        std::vector<std::string> text = {std::string("Server unreachable!"), std::string("check your internet"), std::string("Try again")};
+                        this->dialogueBox.changeText(this->renderer, text, Game::font, {150, 0, 0, 255});
+                        this->dialogueBox.enable();
+                    }
+                    else if (not client.getId())
+                    {
+                        std::vector<std::string> text = {std::string("Wrong code!"), std::string("No game has code:"), this->code};
+                        this->dialogueBox.changeText(this->renderer, text, Game::font, {150, 0, 0, 255});
+                        this->dialogueBox.enable();
+                    }
+                    goto end;
+                }
+                {
+                    std::vector<std::string> text = {std::string("Enter code:"), this->code};
+                    this->dialogueBox.changeText(this->renderer, text, Game::font, {0, 0, 100, 255});
+                }
+            end:
                 break;
             case SDL_MOUSEMOTION:
                 uint32_t distance = sqrt(event.motion.xrel * event.motion.xrel + event.motion.yrel * event.motion.yrel);

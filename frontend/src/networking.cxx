@@ -219,7 +219,8 @@ bool Client::joinByCode(std::string code)
     if (result != CURLE_OK)
         return false;
     this->id = std::stoi(this->response);
-    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
+    if (this->id)
+        clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
     return true;
 }
 bool Client::generateCode()
