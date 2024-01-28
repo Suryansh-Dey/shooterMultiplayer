@@ -94,11 +94,22 @@ bool Game::run()
         FPS_manager(FRAME_GAP);
     }
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    bool player1WasAlive = true, player2WasAlive = true;
     while (this->inputManager.handelInput())
     {
         this->player1.update();
         this->player2.update();
         collisionHandeler(this->player1, this->player2);
+		if (not player1.isAlive() and player1WasAlive)
+		{
+			animateDeath(player1, this->renderer, deathImages);
+            player1WasAlive = false;
+		}
+		else if (not player2.isAlive() and player2WasAlive)
+		{
+			animateDeath(player2, this->renderer, deathImages);
+            player2WasAlive = false;
+		}
         this->player1.render(this->renderer);
         this->player2.render(this->renderer);
         this->inputManager.render(this->renderer);
