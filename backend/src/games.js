@@ -25,7 +25,7 @@ class Games {
         if (this.games.hasOwnProperty(gameID) || parseInt(gameID) >= this.nextGameId)
             return '0'
         this.games[gameID] = ["NULL", "NULL"]
-        return gameID + '0'
+        return gameID + '1'
     }
     fetch(id) {
         let gameID = id.slice(0, -1)
