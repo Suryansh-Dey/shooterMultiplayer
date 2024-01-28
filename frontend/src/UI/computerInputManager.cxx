@@ -1,5 +1,3 @@
-#include "buttons.cxx"
-
 class BallSelectButtons : public SelectableOptions
 {
     Shooter *player;

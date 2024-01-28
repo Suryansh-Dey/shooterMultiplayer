@@ -5,7 +5,7 @@
         "name": "Debug",
         "type": "cppdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/bin/shooterMultiplayer.exe",
+        "program": "${workspaceFolder}/bin/Magic.exe",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/bin",

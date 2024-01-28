@@ -1,3 +1,4 @@
+#include "buttons.cxx"
 #ifdef __ANDROID__
 #include "mobileInputManager.cxx"
 SDL_Renderer *createWindow(int &SCREEN_WIDTH, int &SCREEN_HEIGHT)
