@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 	if (argc == 2)
 		serverURL = argv[1];
 	else
-		"http://localhost:3000";
+		serverURL = "http://localhost:3000";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
