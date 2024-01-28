@@ -11,6 +11,7 @@ protected:
     SDL_Rect rect;
 
 public:
+    Icon(){}
     Icon(SDL_Texture *image, int x, int y, int w, int h);
     Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance = false);
     Icon(const Icon &other);

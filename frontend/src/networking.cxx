@@ -81,6 +81,7 @@ public:
     bool joinRandom();
     inline unsigned int getId();
     bool joinByCode(std::string code);
+    bool generateCode();
     Match getMatch();
     bool initMatch(Shooter &player1, Shooter &player2);
     bool sendAndRecieve(Shooter &player1, Shooter &player2);
@@ -214,6 +215,19 @@ bool Client::joinByCode(std::string code)
         return false;
     this->response = "";
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/join?id=" + code).c_str());
+    CURLcode result = curl_easy_perform(this->curl);
+    if (result != CURLE_OK)
+        return false;
+    this->id = std::stoi(this->response);
+    clientThread = std::thread(this->clientThreadFunction, this, Client::serverURL, SCREEN_WIDTH, SCREEN_HEIGHT, this->id);
+    return true;
+}
+bool Client::generateCode()
+{
+    if (id)
+        return false;
+    this->response = "";
+    curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/code").c_str());
     CURLcode result = curl_easy_perform(this->curl);
     if (result != CURLE_OK)
         return false;

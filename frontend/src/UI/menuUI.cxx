@@ -8,30 +8,39 @@ protected:
     bool active;
     uint32_t targetWidth, targetHeight;
     int targetParagraphHeight;
+    void format();
 
 public:
-    DialogueBox(SDL_Renderer *renderer, std::vector<std::string> text, SDL_Texture *images, int x, int y, int w, int h, bool active = true, float margin_normal = 0.1);
-    DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *image, int x, int y, int w, int h, bool active, float margin_normal = 0.1);
+    DialogueBox(SDL_Renderer *renderer, SDL_Texture *images, int x, int y, int w, int h, bool active = true, float margin_normal = 0.1);
+    DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *image, int x, int y, int w, int h, bool active = true, float margin_normal = 0.1);
     inline void disable();
     inline void enable();
+    inline void changeText(SDL_Renderer *renderer, std::vector<std::string> &text, TTF_Font *font, SDL_Color color);
     void render(SDL_Renderer *renderer, uint8_t alpha = 255);
+    float dimentionPercent();
 };
-DialogueBox::DialogueBox(SDL_Renderer *renderer, std::vector<std::string> text, SDL_Texture *image, int x, int y, int w, int h, bool active, float margin_normal) : Icon(image, x, y, 0, 0), width(w), height(h), paragraphHeight((1 - margin_normal) * h)
+void DialogueBox::format()
+{
+    for (uint32_t lineNo = 0; lineNo < this->text.size(); lineNo++)
+    {
+        text[lineNo].setRectPosition(this->rect.x + this->rect.w / 2, this->rect.y + (lineNo + 1) * this->rect.h / (this->text.size() + 1));
+    }
+}
+DialogueBox::DialogueBox(SDL_Renderer *renderer, SDL_Texture *image, int x, int y, int w, int h, bool active, float margin_normal) : Icon(image, x, y, 0, 0), width(w), height(h), paragraphHeight((1 - margin_normal) * h)
 {
     int boxWidth, boxHeight;
     SDL_QueryTexture(image, NULL, NULL, &boxWidth, &boxHeight);
-    for (std::string &line : text)
-        this->text.emplace_back(Icon(renderer, line, Game::font, {255, 255, 0, 255}, x, y, 0, true));
     if (active)
         this->enable();
     else
         this->disable();
 }
-DialogueBox::DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *image, int x, int y, int w, int h, bool active, float margin_normal) : Icon(image, x, y, 0, 0), width(w), height(h), paragraphHeight((1 - margin_normal) * h)
+DialogueBox::DialogueBox(SDL_Renderer *renderer, std::string line, SDL_Texture *image, int x, int y, int w, int h, bool active, float margin_normal) : Icon(image, x, y, 0, 0), text(1), width(w), height(h), paragraphHeight((1 - margin_normal) * h)
 {
     int boxWidth, boxHeight;
     SDL_QueryTexture(image, NULL, NULL, &boxWidth, &boxHeight);
-    this->text.emplace_back(Icon(renderer, line, Game::font, {255, 255, 0, 255}, x, y, 0, true));
+    this->text[0] = Icon(renderer, line, Game::font, {255, 255, 0, 255}, 0, 0, 0, true);
+    this->format();
     if (active)
         this->enable();
     else
@@ -51,11 +60,19 @@ void DialogueBox::enable()
     this->targetParagraphHeight = this->paragraphHeight;
     this->active = true;
 }
+void DialogueBox::changeText(SDL_Renderer *renderer, std::vector<std::string> &text, TTF_Font *font, SDL_Color color)
+{
+    this->text = std::vector<Icon>(text.size());
+    for (int line_no = 0; line_no < this->text.size(); line_no++)
+        this->text[line_no].change(renderer, text[line_no], font, color);
+    this->format();
+}
 void DialogueBox::render(SDL_Renderer *renderer, uint8_t alpha)
 {
     if (not(this->active or this->rect.w))
         return;
     this->setRectDimention((this->rect.w + this->targetWidth) / 2, (this->rect.h + this->targetHeight) / 2);
+    this->format();
     Icon::render(renderer, alpha);
     for (Icon &line : this->text)
     {
@@ -63,6 +80,10 @@ void DialogueBox::render(SDL_Renderer *renderer, uint8_t alpha)
         line.setRectDimention((letterHeight / line.getAspectRatio() + line.getRect().w) / 2, (letterHeight + line.getRect().h) / 2);
         line.render(renderer, alpha);
     }
+}
+float DialogueBox::dimentionPercent()
+{
+    return float(this->rect.w) / this->width;
 }
 
 class ButtonIcon : public DialogueBox
@@ -83,6 +104,7 @@ class Menu
 {
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
     ButtonIcon cancelIcon, exitIcon, startIcon, joinRandomIcon, generateCodeIcon, joinByCodeIcon;
+    DialogueBox dialogueBox;
     Shooter particleEffects;
     SDL_Renderer *renderer;
     void pressButtons(int x, int y, Client &client);
@@ -91,7 +113,7 @@ public:
     Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
     bool run(Client &client);
 };
-Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.5 * SCREEN_WIDTH, 0.7 * SCREEN_HEIGHT, 0.25 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.5 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
+Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.5 * SCREEN_WIDTH, 0.7 * SCREEN_HEIGHT, 0.25 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.5 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), dialogueBox(renderer, Game::buttonImages["button"], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
 {
 }
 void Menu::pressButtons(int x, int y, Client &client)
@@ -104,7 +126,18 @@ void Menu::pressButtons(int x, int y, Client &client)
         this->startIcon.disable();
     }
     else if (this->joinRandomIcon.isPressed(x, y))
+    {
         client.joinRandom();
+        goto matchMaking;
+    }
+    else if (this->generateCodeIcon.isPressed(x, y))
+    {
+        client.generateCode();
+        std::vector text = {std::string("Team code:"), std::to_string(client.getId())};
+        this->dialogueBox.changeText(this->renderer, text, Game::font, {255, 255, 255, 255});
+        this->dialogueBox.enable();
+        goto matchMaking;
+    }
     else
     {
         this->joinRandomIcon.disable();
@@ -112,6 +145,13 @@ void Menu::pressButtons(int x, int y, Client &client)
         this->generateCodeIcon.disable();
         this->startIcon.enable();
     }
+    return;
+matchMaking:
+    this->joinRandomIcon.disable();
+    this->joinByCodeIcon.disable();
+    this->generateCodeIcon.disable();
+    this->startIcon.disable();
+    this->cancelIcon.enable();
 }
 bool Menu::run(Client &client)
 {
@@ -145,6 +185,7 @@ bool Menu::run(Client &client)
         this->generateCodeIcon.render(renderer);
         this->joinByCodeIcon.render(renderer);
         this->joinRandomIcon.render(renderer);
+        this->dialogueBox.render(renderer, this->dialogueBox.dimentionPercent() * 200);
         this->particleEffects.sprinkler.render(renderer, this->particleEffects.time);
         SDL_RenderPresent(renderer);
         FPS_manager(Game::FRAME_GAP);
