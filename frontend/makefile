@@ -6,5 +6,5 @@ LIBRARY_PATH = -L dependencies/SDL2/lib -L dependencies/curl/lib
 BIN_DIR = bin
 
 shooterMultiplayer: src/main.cxx
-	$(CXX) $(CXXFLAGS) -o $(BIN_DIR)/shooterMultiplayer src/main.cxx $(INCLUDE_PATH) $(LIBRARY_PATH) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) -o $(BIN_DIR)/Magic src/main.cxx $(INCLUDE_PATH) $(LIBRARY_PATH) $(LDFLAGS)
 

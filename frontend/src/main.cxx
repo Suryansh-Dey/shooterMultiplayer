@@ -14,11 +14,15 @@
 #include "UI/gameUI.cxx"
 #include "game.cxx"
 #include "UI/menuUI.cxx"
-int SCREEN_WIDTH = 800, SCREEN_HEIGHT = 500;
+int SCREEN_WIDTH, SCREEN_HEIGHT;
 bool quit = false;
-
+std::string serverURL;
 int main(int argc, char *argv[])
 {
+	if (argc == 2)
+		serverURL = argv[1];
+	else
+		"http://localhost:3000";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -27,7 +31,7 @@ int main(int argc, char *argv[])
 	while (!quit)
 	{
 		Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT, renderer);
-		Client client("http://localhost:3000", SCREEN_WIDTH, SCREEN_HEIGHT);
+		Client client(serverURL, SCREEN_WIDTH, SCREEN_HEIGHT);
 		quit = menu.run(client);
 		if (quit)
 			break;
