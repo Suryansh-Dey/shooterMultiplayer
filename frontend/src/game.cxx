@@ -16,18 +16,20 @@ private:
     SDL_Renderer *renderer;
     Shooter player1, player2;
     InputManager inputManager;
+    std::string message = "Opponent not responding! Tap to escape";
+    Icon messageIcon;
     Client &client;
     unsigned int gameId;
 
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client);
     static void loadResources(SDL_Renderer *renderer, std::string path);
-    bool run(); //returns if game was quit
+    bool run(); // returns if game was quit
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
 SDL_Texture *Game::backgroundImage;
 TTF_Font *Game::font;
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client(client)
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), messageIcon(renderer, message, Game::font, {150, 0, 0, 255}, 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.02 * SCREEN_WIDTH), client(client)
 {
     this->gameId = this->client.getId();
     float NormalPositionY1 = 0.2, NormalPositionY2 = 0.8;
@@ -86,10 +88,14 @@ bool Game::run()
                 case SDLK_ESCAPE:
                     return false;
                 }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                return false;
             }
         }
         SDL_RenderClear(this->renderer);
         SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
+        messageIcon.render(this->renderer);
         SDL_RenderPresent(this->renderer);
         FPS_manager(FRAME_GAP);
     }
