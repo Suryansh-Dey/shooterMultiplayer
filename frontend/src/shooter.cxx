@@ -41,7 +41,7 @@ public:
 private:
 	//**** Constants ****
 	int RADIUS, GUN_RADIUS, SPEED, RECOIL; // speed is in ∆pixels/frame;
-	int SCREEN_WIDTH, SCREEN_HEIGHT;
+	int SCREEN_WIDTH, SCREEN_HEIGHT, TOTAL_HEALTH = 10;
 	std::unordered_map<std::string, SDL_Texture *> images;
 	//**** Variables****
 	float x, y;
@@ -70,7 +70,7 @@ private:
 
 public:
 	Shooter() {}
-	Shooter(int arg_SCREEN_WIDTH, int arg_SCREEN_HEIGHT, int arg_x, int arg_y, int magazine_size, std::unordered_map<std::string, SDL_Texture *> arg_images, int RADIUS = 50, int GUN_RADIUS = 20, int SPEED = 7, int RECOIL = 10) : SCREEN_WIDTH(arg_SCREEN_WIDTH), SCREEN_HEIGHT(arg_SCREEN_HEIGHT), images(arg_images), x(arg_x), y(arg_y), health(10), state(none), magazine(magazine_size), RADIUS(RADIUS), GUN_RADIUS(GUN_RADIUS), SPEED(SPEED), RECOIL(RECOIL)
+	Shooter(int arg_SCREEN_WIDTH, int arg_SCREEN_HEIGHT, int arg_x, int arg_y, int magazine_size, std::unordered_map<std::string, SDL_Texture *> arg_images, int RADIUS = 50, int GUN_RADIUS = 20, int SPEED = 7, int RECOIL = 10) : SCREEN_WIDTH(arg_SCREEN_WIDTH), SCREEN_HEIGHT(arg_SCREEN_HEIGHT), images(arg_images), x(arg_x), y(arg_y), health(TOTAL_HEALTH), state(none), magazine(magazine_size), RADIUS(RADIUS), GUN_RADIUS(GUN_RADIUS), SPEED(SPEED), RECOIL(RECOIL)
 	{
 		Shooter::Bullet::RADIUS = SCREEN_HEIGHT * 0.06;
 		Shooter::Bullet::SPEED = SCREEN_HEIGHT * 0.015;
@@ -219,7 +219,7 @@ inline bool Shooter::isAlive()
 inline void Shooter::respawn(std::unordered_map<std::string, SDL_Texture *> images)
 {
 	this->images["gun"] = images["gun"];
-	health = 10;
+	health = TOTAL_HEALTH;
 	state = none;
 }
 inline int Shooter::get_availableBulletCount()
@@ -263,6 +263,10 @@ void Shooter::render(SDL_Renderer *s)
 	sprinkler.render(s, time);
 	temp_rect = createRect(x, y, 2 * GUN_RADIUS, 2 * GUN_RADIUS);
 	SDL_RenderCopyEx(s, images["gun"], NULL, &temp_rect, gunAngle_degree, NULL, SDL_FLIP_NONE);
+	temp_rect = createRect(x, y + RADIUS / 2, 1.5 * RADIUS, RADIUS / 4);
+	SDL_RenderCopy(s, images["healthBar"], NULL, &temp_rect);
+	temp_rect = createRect(x, y + RADIUS / 2, (float(health) / TOTAL_HEALTH) * 1.5 * RADIUS, RADIUS / 5);
+	SDL_RenderCopy(s, images["health"], NULL, &temp_rect);
 }
 void Shooter::movementAnimation()
 {

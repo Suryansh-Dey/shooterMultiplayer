@@ -11,9 +11,10 @@ protected:
     SDL_Rect rect;
 
 public:
-    Icon(){}
+    Icon() {}
     Icon(SDL_Texture *image, int x, int y, int w, int h);
     Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance = false);
+    Icon(SDL_Renderer *renderer, const std::string &&text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance = false);
     Icon(const Icon &other);
     Icon &operator=(const Icon &other);
     ~Icon();
@@ -91,6 +92,9 @@ Icon::Icon(SDL_Renderer *renderer, const std::string &text, TTF_Font *font, SDL_
     w *= text.length();
     this->rect = createRect(x, y, w, w * float(surface->h) / surface->w);
     SDL_FreeSurface(surface);
+}
+Icon::Icon(SDL_Renderer *renderer, const std::string &&text, TTF_Font *font, SDL_Color color, int x, int y, int w, bool isTemporaryInstance) : Icon(renderer, text, font, color, x, y, w, isTemporaryInstance)
+{
 }
 Icon::Icon(const Icon &other) : imageOwner(other.imageOwner and other.isTemporaryInstance), image(other.image), rect(other.rect)
 {

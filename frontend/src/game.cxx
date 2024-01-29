@@ -8,7 +8,7 @@ public:
     static constexpr int FRAME_GAP = 1000 / FPS;
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-    static std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages;
+    static std::unordered_map<std::string, SDL_Texture *> buttonImages, shooterImages, deathImages, enemyShooterImages;
     static SDL_Texture *backgroundImage;
     static TTF_Font *font;
 
@@ -16,8 +16,6 @@ private:
     SDL_Renderer *renderer;
     Shooter player1, player2;
     InputManager inputManager;
-    std::string message = "Opponent not responding! Tap to escape";
-    Icon messageIcon;
     Client &client;
     unsigned int gameId;
 
@@ -26,10 +24,10 @@ public:
     static void loadResources(SDL_Renderer *renderer, std::string path);
     bool run(); // returns if game was quit
 };
-std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
+std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages, Game::enemyShooterImages;
 SDL_Texture *Game::backgroundImage;
 TTF_Font *Game::font;
-Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), messageIcon(renderer, message, Game::font, {150, 0, 0, 255}, 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.02 * SCREEN_WIDTH), client(client)
+Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client) : renderer(renderer), SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), inputManager(player1, buttonImages, SCREEN_WIDTH, SCREEN_HEIGHT), client(client)
 {
     this->gameId = this->client.getId();
     float NormalPositionY1 = 0.2, NormalPositionY2 = 0.8;
@@ -37,7 +35,7 @@ Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &
         std::swap(NormalPositionY1, NormalPositionY2);
 
     this->player1 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY1, 10, Game::shooterImages);
-    this->player2 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY2, 10, Game::shooterImages);
+    this->player2 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY2, 10, Game::enemyShooterImages);
 }
 void Game::loadResources(SDL_Renderer *renderer, std::string path)
 {
@@ -58,6 +56,8 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     shooterImages["spark_1"] = IMG_LoadTexture(renderer, (path + "/spark_1.png").c_str());
     shooterImages["spark_2"] = IMG_LoadTexture(renderer, (path + "/spark_2.png").c_str());
     shooterImages["frost"] = IMG_LoadTexture(renderer, (path + "/frost.png").c_str());
+    shooterImages["health"] = IMG_LoadTexture(renderer, (path + "/greenHealth.png").c_str());
+    shooterImages["healthBar"] = IMG_LoadTexture(renderer, (path + "/healthBar.png").c_str());
     deathImages["gunDeath_1"] = IMG_LoadTexture(renderer, (path + "/wizardDeath_1.png").c_str());
     deathImages["gunDeath_2"] = IMG_LoadTexture(renderer, (path + "/wizardDeath_2.png").c_str());
     deathImages["gunDeath_3"] = IMG_LoadTexture(renderer, (path + "/wizardDeath_3.png").c_str());
@@ -68,36 +68,41 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     buttonImages["joystickButton"] = IMG_LoadTexture(renderer, (path + "/joystickButton.png").c_str());
     buttonImages["button"] = IMG_LoadTexture(renderer, (path + "/button.png").c_str());
     buttonImages["box"] = IMG_LoadTexture(renderer, (path + "/box.png").c_str());
+    enemyShooterImages = shooterImages;
+    enemyShooterImages["health"] = IMG_LoadTexture(renderer, (path + "/redHealth.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
     font = TTF_OpenFont((path + "/bombing.ttf").c_str(), 60);
 }
 bool Game::run()
 {
-    while (not this->client.initMatch(this->player1, this->player2))
     {
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
+        Icon messageIcon(renderer, "Opponent not responding! Tap to escape", Game::font, {150, 0, 0, 255}, 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.02 * SCREEN_WIDTH);
+        while (not this->client.initMatch(this->player1, this->player2))
         {
-            switch (event.type)
+            SDL_Event event;
+            while (SDL_PollEvent(&event))
             {
-            case SDL_QUIT:
-                return true;
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym)
+                switch (event.type)
                 {
-                case SDLK_ESCAPE:
+                case SDL_QUIT:
+                    return true;
+                case SDL_KEYDOWN:
+                    switch (event.key.keysym.sym)
+                    {
+                    case SDLK_ESCAPE:
+                        return false;
+                    }
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
                     return false;
                 }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                return false;
             }
+            SDL_RenderClear(this->renderer);
+            SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
+            messageIcon.render(this->renderer);
+            SDL_RenderPresent(this->renderer);
+            FPS_manager(FRAME_GAP);
         }
-        SDL_RenderClear(this->renderer);
-        SDL_RenderCopy(this->renderer, backgroundImage, NULL, NULL);
-        messageIcon.render(this->renderer);
-        SDL_RenderPresent(this->renderer);
-        FPS_manager(FRAME_GAP);
     }
     SDL_SetRelativeMouseMode(SDL_TRUE);
     while (this->inputManager.handelInput())
@@ -110,7 +115,7 @@ bool Game::run()
             animateDeath(player1, this->renderer, deathImages);
             return false;
         }
-        else if (not player2.isAlive())
+        else if (not(player2.isAlive() and client.sendAndRecieve(player1, player2)))
         {
             animateDeath(player2, this->renderer, deathImages);
             return false;
@@ -121,8 +126,6 @@ bool Game::run()
         SDL_RenderPresent(this->renderer);
         SDL_RenderClear(this->renderer);
         FPS_manager(FRAME_GAP);
-        if (!client.sendAndRecieve(player1, player2))
-            return false;
     }
     return true;
 }
