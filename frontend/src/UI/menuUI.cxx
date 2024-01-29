@@ -108,22 +108,31 @@ bool ButtonIcon::isPressed(int x, int y)
 
 class Menu
 {
+public:
+    enum class Result
+    {
+        CANCELLED,
+        PLAY,
+        EXIT
+    };
+
+private:
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
     ButtonIcon cancelIcon, exitIcon, startIcon, joinRandomIcon, generateCodeIcon, joinByCodeIcon;
     DialogueBox dialogueBox;
     Shooter particleEffects;
     SDL_Renderer *renderer;
     std::string code;
-    bool pressButtons(int x, int y, Client &client);
+    Menu::Result pressButtons(int x, int y, Client &client);
 
 public:
     Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer);
-    bool run(Client &client);
+    Menu::Result run(Client &client);
 };
 Menu::Menu(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT), cancelIcon(renderer, "cancel", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.3 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), exitIcon(renderer, "exit", 0.9 * SCREEN_WIDTH, 0.1 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), startIcon(renderer, "start", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.2 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT), joinRandomIcon(renderer, "random", 0.5 * SCREEN_WIDTH, 0.7 * SCREEN_HEIGHT, 0.25 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), generateCodeIcon(renderer, "create team", 0.5 * SCREEN_WIDTH, 0.5 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), joinByCodeIcon(renderer, "join team", 0.5 * SCREEN_WIDTH, 0.3 * SCREEN_HEIGHT, 0.35 * SCREEN_WIDTH, 0.2 * SCREEN_HEIGHT, false), dialogueBox(renderer, Game::buttonImages["box"], SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4, 2 * SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2, false), particleEffects(SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 10, Game::shooterImages), renderer(renderer)
 {
 }
-bool Menu::pressButtons(int x, int y, Client &client)
+Menu::Result Menu::pressButtons(int x, int y, Client &client)
 {
     if (this->startIcon.isPressed(x, y))
     {
@@ -179,7 +188,9 @@ bool Menu::pressButtons(int x, int y, Client &client)
         this->dialogueBox.enable();
     }
     else if (this->cancelIcon.isPressed(x, y))
-        return true;
+        return Menu::Result::CANCELLED;
+    else if (this->exitIcon.isPressed(x, y))
+        return Menu::Result::EXIT;
     else if (not this->cancelIcon.isActive())
     {
         if (this->dialogueBox.isActive())
@@ -192,16 +203,16 @@ bool Menu::pressButtons(int x, int y, Client &client)
             this->startIcon.enable();
         }
     }
-    return false;
+    return Menu::Result::PLAY;
 matchMaking:
     this->joinRandomIcon.disable();
     this->joinByCodeIcon.disable();
     this->generateCodeIcon.disable();
     this->startIcon.disable();
     this->cancelIcon.enable();
-    return false;
+    return Menu::Result::PLAY;
 }
-bool Menu::run(Client &client)
+Menu::Result Menu::run(Client &client)
 {
     SDL_SetRelativeMouseMode(SDL_FALSE);
     while (true)
@@ -212,14 +223,15 @@ bool Menu::run(Client &client)
             switch (event.type)
             {
             case SDL_QUIT:
-                return true;
+                return Menu::Result::EXIT;
             case SDL_MOUSEBUTTONDOWN:
+            {
                 this->particleEffects.sprinkleFire(event.motion.x, event.motion.y, 30, 30, 0, 0);
-                if (this->pressButtons(event.motion.x, event.motion.y, client))
-                    return false;
-                else if (this->exitIcon.isPressed(event.motion.x, event.motion.y))
-                    return true;
-                break;
+                Menu::Result result = this->pressButtons(event.motion.x, event.motion.y, client);
+                if (result != Menu::Result::PLAY)
+                    return result;
+            }
+            break;
             case SDL_KEYDOWN:
                 if (not this->dialogueBox.isActive())
                     break;
@@ -304,5 +316,5 @@ bool Menu::run(Client &client)
                 break;
         }
     }
-    return false;
+    return Menu::Result::PLAY;
 }

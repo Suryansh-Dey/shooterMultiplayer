@@ -15,7 +15,6 @@
 #include "game.cxx"
 #include "UI/menuUI.cxx"
 int SCREEN_WIDTH, SCREEN_HEIGHT;
-bool quit = false;
 std::string serverURL;
 int main(int argc, char *argv[])
 {
@@ -28,18 +27,18 @@ int main(int argc, char *argv[])
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 	Game::loadResources(renderer, "../resources");
 
-	while (!quit)
+	while (true)
 	{
 		Menu menu(SCREEN_WIDTH, SCREEN_HEIGHT, renderer);
 		Client client(serverURL, SCREEN_WIDTH, SCREEN_HEIGHT);
-		quit = menu.run(client);
-		if (quit)
+		Menu::Result result = menu.run(client);
+		if (result == Menu::Result::EXIT)
 			break;
-		else if (not client.getId())
+		else if (result == Menu::Result::CANCELLED)
 			continue;
 		Game game(SCREEN_WIDTH, SCREEN_HEIGHT, renderer, client);
-		quit = game.run();
-		std::cout << "Match finished\n";
+		if (game.run())
+			break;
 	}
 	return 0;
 }

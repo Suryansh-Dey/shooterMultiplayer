@@ -22,7 +22,7 @@ private:
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client);
     static void loadResources(SDL_Renderer *renderer, std::string path);
-    bool run();
+    bool run(); //returns if game was quit
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages;
 SDL_Texture *Game::backgroundImage;
@@ -99,16 +99,16 @@ bool Game::run()
         this->player1.update();
         this->player2.update();
         collisionHandeler(this->player1, this->player2);
-		if (not player1.isAlive())
-		{
-			animateDeath(player1, this->renderer, deathImages);
+        if (not player1.isAlive())
+        {
+            animateDeath(player1, this->renderer, deathImages);
             return false;
-		}
-		else if (not player2.isAlive())
-		{
-			animateDeath(player2, this->renderer, deathImages);
+        }
+        else if (not player2.isAlive())
+        {
+            animateDeath(player2, this->renderer, deathImages);
             return false;
-		}
+        }
         this->player1.render(this->renderer);
         this->player2.render(this->renderer);
         this->inputManager.render(this->renderer);
