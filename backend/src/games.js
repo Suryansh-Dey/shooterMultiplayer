@@ -17,12 +17,15 @@ class Games {
         }
     }
     generateCode() {
+        this.games[(this.nextGameId).toString()] = ["WAIT"]
         this.nextGameId++
         return (this.nextGameId - 1).toString() + '0'
     }
     joinByCode(player1Code) {
         let gameID = player1Code.slice(0, -1)
-        if (this.games.hasOwnProperty(gameID) || parseInt(gameID) >= this.nextGameId)
+        if (!this.games.hasOwnProperty(gameID))
+            return '0'
+        else if (this.games[gameID][0] != "WAIT")
             return '0'
         this.games[gameID] = ["NULL", "NULL"]
         return gameID + '1'
@@ -42,7 +45,10 @@ class Games {
         this.games[gameID][parseInt(id[id.length - 1])] = state
     }
     isAvailable(id) {
-        return this.games.hasOwnProperty(id.slice(0, -1))
+        let gameID = id.slice(0, -1)
+        if (this.games.hasOwnProperty(gameID))
+            return this.games[gameID][0] != "WAIT"
+        return false;
     }
     quit(id) {
         let gameID = id.slice(0, -1)
