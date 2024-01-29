@@ -174,6 +174,7 @@ void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_
     std::string response;
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);
     while (true)
     {
         std::unique_lock<std::mutex> lock(client->clientThreadMutex);
@@ -191,10 +192,10 @@ void Client::clientThreadFunction(Client *client, std::string serverURL, uint32_
 Client::Client(std::string serverURL, uint32_t SCREEN_WIDTH, uint32_t SCREEN_HEIGHT) : SCREEN_WIDTH(SCREEN_WIDTH), SCREEN_HEIGHT(SCREEN_HEIGHT)
 {
     Client::serverURL = serverURL;
-    curl_global_init(CURL_GLOBAL_ALL);
     this->curl = curl_easy_init();
     curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Client::storeToStringCallback);
     curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, &(this->response));
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1L);
 }
 bool Client::joinRandom()
 {
@@ -287,5 +288,4 @@ Client::~Client()
     curl_easy_setopt(this->curl, CURLOPT_URL, (Client::serverURL + "/quit?id=" + std::to_string(this->id)).c_str());
     curl_easy_perform(this->curl);
     curl_easy_cleanup(curl);
-    curl_global_cleanup();
 }

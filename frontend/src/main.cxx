@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 		serverURL = "http://localhost:3000";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
+	curl_global_init(CURL_GLOBAL_ALL);
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 	Game::loadResources(renderer, "../resources");
 
