@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	if (argc == 2)
 		serverURL = std::string("http://") + argv[1] + std::string(":3000");
 	else
-		serverURL = "http://localhost:3000";
+		serverURL = "http://192.168.106.222:3000";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	curl_global_init(CURL_GLOBAL_ALL);
