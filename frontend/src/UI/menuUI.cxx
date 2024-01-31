@@ -284,7 +284,10 @@ Menu::Result Menu::run(Client &client)
                         this->dialogueBox.enable();
                     }
                     goto end;
+                default:
+                    goto end;
                 }
+                if(this->joinByCodeIcon.isActive())
                 {
                     std::vector<std::string> text = {std::string("Enter code:"), this->code};
                     this->dialogueBox.changeText(this->renderer, text, Game::font, {0, 0, 100, 255});
