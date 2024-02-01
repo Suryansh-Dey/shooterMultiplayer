@@ -89,6 +89,7 @@ public:
 	}
 	inline bool isAlive();
 	inline void respawn(std::unordered_map<std::string, SDL_Texture *> images);
+	inline SDL_Point get_position();
 	inline int get_availableBulletCount();
 	inline float get_headingAngle_rad();
 	inline float get_gunAngle_degree();
@@ -221,6 +222,10 @@ inline void Shooter::respawn(std::unordered_map<std::string, SDL_Texture *> imag
 	this->images["gun"] = images["gun"];
 	health = TOTAL_HEALTH;
 	state = none;
+}
+SDL_Point Shooter::get_position()
+{
+	return SDL_Point{int(this->x), int(this->y)};
 }
 inline int Shooter::get_availableBulletCount()
 {

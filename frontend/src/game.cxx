@@ -21,7 +21,7 @@ private:
 
 public:
     Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &client);
-    static void loadResources(SDL_Renderer *renderer, std::string path);
+    static void loadResources(SDL_Renderer *renderer, std::string path, std::string fontPath);
     bool run(); // returns if game was quit
 };
 std::unordered_map<std::string, SDL_Texture *> Game::buttonImages, Game::shooterImages, Game::deathImages, Game::enemyShooterImages;
@@ -37,7 +37,7 @@ Game::Game(int SCREEN_WIDTH, int SCREEN_HEIGHT, SDL_Renderer *renderer, Client &
     this->player1 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY1, 10, Game::shooterImages);
     this->player2 = Shooter(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH / 2, SCREEN_HEIGHT * NormalPositionY2, 10, Game::enemyShooterImages);
 }
-void Game::loadResources(SDL_Renderer *renderer, std::string path)
+void Game::loadResources(SDL_Renderer *renderer, std::string path, std::string fontPath)
 {
     shooterImages["shooter"] = IMG_LoadTexture(renderer, (path + "/shooter.png").c_str());
     shooterImages["gun"] = IMG_LoadTexture(renderer, (path + "/wizard.png").c_str());
@@ -71,7 +71,7 @@ void Game::loadResources(SDL_Renderer *renderer, std::string path)
     enemyShooterImages = shooterImages;
     enemyShooterImages["health"] = IMG_LoadTexture(renderer, (path + "/redHealth.png").c_str());
     backgroundImage = IMG_LoadTexture(renderer, (path + "/background.png").c_str());
-    font = TTF_OpenFont((path + "/bombing.ttf").c_str(), 60);
+    font = TTF_OpenFont((fontPath + "/bombing.ttf").c_str(), 60);
 }
 bool Game::run()
 {
@@ -104,7 +104,6 @@ bool Game::run()
             FPS_manager(FRAME_GAP);
         }
     }
-    SDL_SetRelativeMouseMode(SDL_TRUE);
     while (this->inputManager.handelInput())
     {
         this->player1.update();

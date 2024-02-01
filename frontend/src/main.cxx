@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <fstream>
@@ -21,12 +22,15 @@ int main(int argc, char *argv[])
 	if (argc == 2)
 		serverURL = std::string("http://") + argv[1] + std::string(":3000");
 	else
-		serverURL = "http://192.168.106.222:3000";
+	{
+		std::ifstream data("../resources/data.txt");
+		data >> serverURL;
+	}
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	curl_global_init(CURL_GLOBAL_ALL);
 	SDL_Renderer *renderer = createWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-	Game::loadResources(renderer, "../resources");
+	Game::loadResources(renderer, "../resources/images", "../resources");
 
 	while (true)
 	{

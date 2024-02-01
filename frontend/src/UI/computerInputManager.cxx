@@ -20,7 +20,6 @@ class InputManager
 
     inline void pressButtons(SDL_Event event);
     inline void unpressButtons(SDL_Event event);
-    inline float calulateDTheta(float dx, float dy);
 
 public:
     InputManager(Shooter &player, std::unordered_map<std::string, SDL_Texture *> images, int SCREEN_WIDTH, int SCREEN_HEIGHT);
@@ -69,7 +68,7 @@ bool InputManager::handelInput()
             this->ballSelectButtons.shoot();
             break;
         case SDL_MOUSEMOTION:
-            this->player.rotateGun(this->calulateDTheta(event.motion.xrel, event.motion.yrel));
+            this->player.rotateGun(angleOfVector(event.motion.x - this->player.get_position().x, event.motion.y - this->player.get_position().y)-player.get_gunAngle_degree());
         }
     }
     if (this->joystick.isPressed())
@@ -133,11 +132,4 @@ void InputManager::unpressButtons(SDL_Event event)
         this->joystick.unpressRight();
         break;
     }
-}
-float InputManager::calulateDTheta(float dx, float dy)
-{
-    float theta = this->player.get_gunAngle_degree();
-    float XdTheta = dx * this->MOUSE_SENSITIVITY * (2 * (theta > 180) - 1);
-    float YdTheta = dy * this->MOUSE_SENSITIVITY * (2 * (((theta > 270) and (theta < 360)) or (theta < 90)) - 1);
-    return XdTheta + YdTheta;
 }
