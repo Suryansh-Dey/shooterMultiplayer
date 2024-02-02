@@ -114,7 +114,7 @@ bool Game::run()
             animateDeath(player1, this->renderer, deathImages);
             return false;
         }
-        else if (not(player2.isAlive() and client.sendAndRecieve(player1, player2)))
+        else if (not(player2.isAlive() && client.sendAndRecieve(player1, player2)))
         {
             animateDeath(player2, this->renderer, deathImages);
             return false;

@@ -214,8 +214,7 @@ matchMaking:
 }
 Menu::Result Menu::run(Client &client)
 {
-    SDL_SetRelativeMouseMode(SDL_FALSE);
-    while (true)
+    while (not client.getMatch().active)
     {
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -233,8 +232,8 @@ Menu::Result Menu::run(Client &client)
             }
             break;
             case SDL_KEYDOWN:
-                if (not this->dialogueBox.isActive())
-                    break;
+                if (not(this->dialogueBox.isActive() && this->joinByCodeIcon.isActive()))
+                    goto end;
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_0:
@@ -287,9 +286,12 @@ Menu::Result Menu::run(Client &client)
                 default:
                     goto end;
                 }
-                if(this->joinByCodeIcon.isActive())
                 {
-                    std::vector<std::string> text = {std::string("Enter code:"), this->code};
+                    std::vector<std::string> text;
+                    if (this->code.length())
+                        text = {std::string("Enter code:"), this->code};
+                    else
+                        text = {std::string("Enter code:"), std::string("_ _ _ _ _ _")};
                     this->dialogueBox.changeText(this->renderer, text, Game::font, {0, 0, 100, 255});
                 }
             end:
@@ -313,11 +315,6 @@ Menu::Result Menu::run(Client &client)
         SDL_RenderPresent(renderer);
         FPS_manager(Game::FRAME_GAP);
         this->particleEffects.time++;
-        if (client.getId())
-        {
-            if (client.getMatch().active)
-                break;
-        }
     }
     return Menu::Result::PLAY;
 }
