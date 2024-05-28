@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -o2
+CXXFLAGS = -std=c++17 -o3
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_image -lcurl -lSDL2_ttf
 INCLUDE_PATH = -I dependencies/SDL2/include -I dependencies/curl/include
 LIBRARY_PATH = -L dependencies/SDL2/lib -L dependencies/curl/lib

@@ -5,6 +5,7 @@ class Game
 public:
     //**** ADJUSTABLE CONSTANT PARAMETERS ****
     static constexpr int FPS = 30;
+    //**** GAME CONSTANTS ****
     static constexpr int FRAME_GAP = 1000 / FPS;
     const int SCREEN_WIDTH, SCREEN_HEIGHT;
 

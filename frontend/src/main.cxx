@@ -1,10 +1,8 @@
+#include <iostream>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
-#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
 #include <unordered_map>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -20,12 +18,9 @@ std::string serverURL;
 int main(int argc, char *argv[])
 {
 	if (argc == 2)
-		serverURL = std::string("http://") + argv[1] + std::string(":3000");
+		serverURL = std::string("http://") + argv[1] + std::string(":80");
 	else
-	{
-		std::ifstream data("../resources/data.txt");
-		data >> serverURL;
-	}
+		serverURL = "http://suryansh-dey.ddns.net:80";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	curl_global_init(CURL_GLOBAL_ALL);
