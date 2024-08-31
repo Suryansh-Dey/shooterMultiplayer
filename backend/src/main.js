@@ -34,6 +34,6 @@ app.get("/CLOSESERVER", (req, res) => {
     server.close()
 })
 
-let server = app.listen(80, () => {
-    console.log("Server started on port 80")
+let server = app.listen(3001, () => {
+    console.log("Server started on port 3001")
 })

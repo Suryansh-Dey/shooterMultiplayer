@@ -18,9 +18,9 @@ std::string serverURL;
 int main(int argc, char *argv[])
 {
 	if (argc == 2)
-		serverURL = std::string("http://") + argv[1] + std::string(":80");
+		serverURL = std::string("http://") + argv[1];
 	else
-		serverURL = "http://suryansh-dey.ddns.net:80";
+		serverURL = "http://vinaiak.ddns.net:3001";
 	SDL_Init(SDL_INIT_EVERYTHING);
 	TTF_Init();
 	curl_global_init(CURL_GLOBAL_ALL);
